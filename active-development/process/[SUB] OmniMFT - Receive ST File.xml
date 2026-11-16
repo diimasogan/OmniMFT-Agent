@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bns:Component xmlns:bns="http://api.platform.boomi.com/"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               componentId="ce17901d-ca9f-45de-ae1f-aae2cd1c8783" name="[SUB] OmniMFT - Receive ST File" type="process" folderId="Rjo4OTYzOTM1">
+  <bns:encryptedValues/>
+  <bns:description>Business logic for files pushed by Axway SecureTransport (Generic-HTTP(S) site, PUT). ST wraps the file in multipart/form-data: the first step unwraps it (filename from the part header, original bytes as the document); raw bodies pass through with ?filename= as fallback. Empty files are rejected with an exception so ST marks the transfer Failed. Writes an audit line and returns a JSON receipt. Add downstream routing (store/transform/forward) after the audit step. | built with boomi-companion v1.0.103</bns:description>
+  <bns:object>
+    <process allowSimultaneous="false" enableUserLog="false" processLogOnErrorOnly="false" purgeDataImmediately="false" stopProcessingIfZeroDocuments="true" updateRunDates="false" workload="general">
+      <shapes>
+<shape image="start" name="shape1" shapetype="start" userlabel="" x="48.0" y="48.0">
+  <configuration>
+<passthroughaction/>
+  </configuration>
+  <dragpoints><dragpoint name="shape1.dragpoint1" toShape="shape6" x="224" y="56"/></dragpoints>
+</shape>
+<shape image="dataprocess_icon" name="shape6" shapetype="dataprocess" userlabel="Unwrap ST Multipart" x="240.0" y="48.0">
+  <configuration>
+<dataprocess>
+  <step index="1" key="1" name="Custom Scripting" processtype="12">
+    <dataprocessscript language="groovy2" useCache="true">
+      <script>import java.util.Properties
+import java.io.InputStream
+import com.boomi.execution.ExecutionUtil
+
+/* ST Generic-HTTP(S) PUT sends the file as multipart/form-data. Extract the part's filename
+   and emit the original bytes; non-multipart bodies pass through unchanged. Binary-safe. */
+String queryName = ExecutionUtil.getDynamicProcessProperty("query_filename") ?: ""
+for (int i = 0; i &lt; dataContext.getDataCount(); i++) {
+    InputStream is = dataContext.getStream(i)
+    Properties props = dataContext.getProperties(i)
+    byte[] raw = is.bytes
+    String s = new String(raw, "ISO-8859-1")   /* one char per byte, so offsets are byte offsets */
+    String name = queryName
+    String mode = "raw"
+    InputStream out = new ByteArrayInputStream(raw)
+    String nl = s.indexOf("\r\n") &gt;= 0 ? "\r\n" : "\n"
+    int eol = s.indexOf(nl)
+    if (s.startsWith("--") &amp;&amp; eol &gt; 2) {
+        String boundary = s.substring(0, eol)
+        int hdrEnd = s.indexOf(nl + nl, eol)
+        int end = hdrEnd &gt; 0 ? s.indexOf(nl + boundary, hdrEnd + 2 * nl.length()) : -1
+        if (end &gt; hdrEnd) {
+            def m = (s.substring(eol, hdrEnd) =~ /filename="([^"]*)"/)
+            if (m.find() &amp;&amp; m.group(1)) name = m.group(1)
+            int start = hdrEnd + 2 * nl.length()
+            out = new ByteArrayInputStream(raw, start, end - start)
+            mode = "multipart"
+        }
+    }
+    props.setProperty("document.dynamic.userdefined.DDP_ST_FILENAME", name ?: "unknown")
+    props.setProperty("document.dynamic.userdefined.DDP_ST_PAYLOAD_MODE", mode)
+    dataContext.storeStream(out, props)
+}</script>
+    </dataprocessscript>
+  </step>
+</dataprocess>
+  </configuration>
+  <dragpoints><dragpoint name="shape6.dragpoint1" toShape="shape2" x="416" y="56"/></dragpoints>
+</shape>
+<shape image="documentproperties_icon" name="shape2" shapetype="documentproperties" userlabel="Capture ST File Metadata" x="432.0" y="48.0">
+  <configuration>
+<documentproperties>
+<documentproperty defaultValue="" isDynamicCredential="false" isTradingPartner="false" name="Dynamic Process Property - DPP_ST_FILENAME" persist="false" propertyId="process.DPP_ST_FILENAME" shouldEncrypt="false">
+  <sourcevalues>
+<parametervalue key="0" usesEncryption="false" valueType="track"><trackparameter defaultValue="unknown" propertyId="dynamicdocument.DDP_ST_FILENAME" propertyName="Dynamic Document Property - DDP_ST_FILENAME"/></parametervalue>
+  </sourcevalues>
+</documentproperty>
+<documentproperty defaultValue="" isDynamicCredential="false" isTradingPartner="false" name="Dynamic Process Property - DPP_ST_ACCOUNT" persist="false" propertyId="process.DPP_ST_ACCOUNT" shouldEncrypt="false">
+  <sourcevalues>
+<parametervalue key="0" usesEncryption="false" valueType="process"><processparameter processproperty="query_account" processpropertydefaultvalue="unknown"/></parametervalue>
+  </sourcevalues>
+</documentproperty>
+<documentproperty defaultValue="" isDynamicCredential="false" isTradingPartner="false" name="Dynamic Process Property - DPP_ST_TRACKING_ID" persist="false" propertyId="process.DPP_ST_TRACKING_ID" shouldEncrypt="false">
+  <sourcevalues>
+<parametervalue key="0" usesEncryption="false" valueType="process"><processparameter processproperty="query_trackingId" processpropertydefaultvalue=""/></parametervalue>
+  </sourcevalues>
+</documentproperty>
+<documentproperty defaultValue="" isDynamicCredential="false" isTradingPartner="false" name="Dynamic Process Property - DPP_FILE_BYTES" persist="false" propertyId="process.DPP_FILE_BYTES" shouldEncrypt="false">
+  <sourcevalues>
+<parametervalue key="0" usesEncryption="false" valueType="track"><trackparameter defaultValue="0" propertyId="meta.base.size" propertyName="Base - Size"/></parametervalue>
+  </sourcevalues>
+</documentproperty>
+<documentproperty defaultValue="" isDynamicCredential="false" isTradingPartner="false" name="Dynamic Process Property - DPP_PAYLOAD_MODE" persist="false" propertyId="process.DPP_PAYLOAD_MODE" shouldEncrypt="false">
+  <sourcevalues>
+<parametervalue key="0" usesEncryption="false" valueType="track"><trackparameter defaultValue="" propertyId="dynamicdocument.DDP_ST_PAYLOAD_MODE" propertyName="Dynamic Document Property - DDP_ST_PAYLOAD_MODE"/></parametervalue>
+  </sourcevalues>
+</documentproperty>
+<documentproperty defaultValue="" isDynamicCredential="false" isTradingPartner="false" name="Dynamic Process Property - DPP_HTTP_METHOD" persist="false" propertyId="process.DPP_HTTP_METHOD" shouldEncrypt="false">
+  <sourcevalues>
+<parametervalue key="0" usesEncryption="false" valueType="process"><processparameter processproperty="inmethod" processpropertydefaultvalue=""/></parametervalue>
+  </sourcevalues>
+</documentproperty>
+<documentproperty defaultValue="" isDynamicCredential="false" isTradingPartner="false" name="Dynamic Process Property - DPP_RECEIVED_AT" persist="false" propertyId="process.DPP_RECEIVED_AT" shouldEncrypt="false">
+  <sourcevalues>
+<parametervalue key="0" usesEncryption="false" valueType="date"><dateparameter dateparametertype="current" datetimemask="yyyy-MM-dd'T'HH:mm:ss.SSSZ"/></parametervalue>
+  </sourcevalues>
+</documentproperty>
+</documentproperties>
+  </configuration>
+  <dragpoints><dragpoint name="shape2.dragpoint1" toShape="shape7" x="608" y="56"/></dragpoints>
+</shape>
+<shape image="decision_icon" name="shape7" shapetype="decision" userlabel="File Is Empty?" x="624.0" y="48.0">
+  <configuration>
+<decision comparison="equals" name="File Is Empty?">
+  <decisionvalue valueType="process">
+    <processparameter processproperty="DPP_FILE_BYTES" processpropertydefaultvalue="0"/>
+  </decisionvalue>
+  <decisionvalue valueType="static">
+    <staticparameter staticproperty="0"/>
+  </decisionvalue>
+</decision>
+  </configuration>
+  <dragpoints>
+    <dragpoint identifier="true" name="shape7.dragpoint1" text="True" toShape="shape8" x="800" y="216"/>
+    <dragpoint identifier="false" name="shape7.dragpoint2" text="False" toShape="shape3" x="800" y="56"/>
+  </dragpoints>
+</shape>
+<shape image="exception_icon" name="shape8" shapetype="exception" userlabel="Reject Empty File" x="816.0" y="208.0">
+  <configuration>
+<exception stopProcessReturnSingleDoc="false" stopsingledoc="false" title="Reject Empty File">
+  <exMessage>ST_INBOUND_REJECTED | file {1} from account {2} is empty (0 bytes)</exMessage>
+  <exParameters>
+<parametervalue key="0" usesEncryption="false" valueType="process"><processparameter processproperty="DPP_ST_FILENAME" processpropertydefaultvalue=""/></parametervalue>
+<parametervalue key="1" usesEncryption="false" valueType="process"><processparameter processproperty="DPP_ST_ACCOUNT" processpropertydefaultvalue=""/></parametervalue>
+  </exParameters>
+</exception>
+  </configuration>
+  <dragpoints/>
+</shape>
+<shape image="notify_icon" name="shape3" shapetype="notify" userlabel="Audit: File Received" x="816.0" y="48.0">
+  <configuration>
+<notify disableEvent="true" enableUserLog="false" perExecution="false" title="">
+  <notifyMessage>ST_INBOUND | file={1} | account={2} | stTrackingId={3} | bytes={4} | payload={5} | method={6} | receivedAt={7}</notifyMessage>
+  <notifyMessageLevel>INFO</notifyMessageLevel>
+  <notifyParameters>
+<parametervalue key="0" valueType="process"><processparameter processproperty="DPP_ST_FILENAME" processpropertydefaultvalue=""/></parametervalue>
+<parametervalue key="1" valueType="process"><processparameter processproperty="DPP_ST_ACCOUNT" processpropertydefaultvalue=""/></parametervalue>
+<parametervalue key="2" valueType="process"><processparameter processproperty="DPP_ST_TRACKING_ID" processpropertydefaultvalue=""/></parametervalue>
+<parametervalue key="3" valueType="process"><processparameter processproperty="DPP_FILE_BYTES" processpropertydefaultvalue=""/></parametervalue>
+<parametervalue key="4" valueType="process"><processparameter processproperty="DPP_PAYLOAD_MODE" processpropertydefaultvalue=""/></parametervalue>
+<parametervalue key="5" valueType="process"><processparameter processproperty="DPP_HTTP_METHOD" processpropertydefaultvalue=""/></parametervalue>
+<parametervalue key="6" valueType="process"><processparameter processproperty="DPP_RECEIVED_AT" processpropertydefaultvalue=""/></parametervalue>
+  </notifyParameters>
+</notify>
+  </configuration>
+  <dragpoints><dragpoint name="shape3.dragpoint1" toShape="shape4" x="992" y="56"/></dragpoints>
+</shape>
+<shape image="message_icon" name="shape4" shapetype="message" userlabel="Build JSON Receipt" x="1008.0" y="48.0">
+  <configuration>
+<message combined="false">
+  <msgTxt>'{"status": "RECEIVED", "filename": "'{1}'", "account": "'{2}'", "stTrackingId": "'{3}'", "bytes": "'{4}'", "receivedAt": "'{5}'", "boomiExecutionId": "'{6}'"}'</msgTxt>
+  <msgParameters>
+<parametervalue key="0" valueType="process"><processparameter processproperty="DPP_ST_FILENAME" processpropertydefaultvalue=""/></parametervalue>
+<parametervalue key="1" valueType="process"><processparameter processproperty="DPP_ST_ACCOUNT" processpropertydefaultvalue=""/></parametervalue>
+<parametervalue key="2" valueType="process"><processparameter processproperty="DPP_ST_TRACKING_ID" processpropertydefaultvalue=""/></parametervalue>
+<parametervalue key="3" valueType="process"><processparameter processproperty="DPP_FILE_BYTES" processpropertydefaultvalue=""/></parametervalue>
+<parametervalue key="4" valueType="process"><processparameter processproperty="DPP_RECEIVED_AT" processpropertydefaultvalue=""/></parametervalue>
+<parametervalue key="5" valueType="execution"><executionparameter executionproperty="Execution Id"/></parametervalue>
+  </msgParameters>
+</message>
+  </configuration>
+  <dragpoints><dragpoint name="shape4.dragpoint1" toShape="shape5" x="1184" y="56"/></dragpoints>
+</shape>
+<shape image="returndocuments_icon" name="shape5" shapetype="returndocuments" userlabel="Receipt" x="1200.0" y="48.0">
+  <configuration>
+<returndocuments label="Receipt"/>
+  </configuration>
+  <dragpoints/>
+</shape>
+      </shapes>
+    </process>
+  </bns:object>
+  <bns:processOverrides/>
+</bns:Component>

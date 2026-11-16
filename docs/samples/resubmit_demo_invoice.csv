@@ -1,0 +1,4 @@
+invoice_no,partner,invoice_date,amount_idr,status
+INV-2026-1101,PT Sinar Jaya,2026-11-10,12500000,OPEN
+INV-2026-1102,PT Sinar Jaya,2026-11-11,4750000,OPEN
+INV-2026-1103,PT Sinar Jaya,2026-11-12,980000,PAID

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bns:Component xmlns:bns="http://api.platform.boomi.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               componentId="5da4ca22-3cbc-49f5-a64c-39f75748d7ff" name="OmniMFT Bridge API - Create Request" type="process" folderId="Rjo4OTYzOTM1">
+  <bns:encryptedValues/>
+  <bns:description>Outbound-only bridge: Agentstudio queues an action (JSON body) for the on-prem OmniMFT worker. Stores requests/&lt;requestId&gt;.json and returns the requestId; the result appears at results/&lt;requestId&gt;. | built with boomi-companion v1.0.103</bns:description>
+  <bns:object>
+    <process allowSimultaneous="true" enableUserLog="false" processLogOnErrorOnly="false" purgeDataImmediately="false" stopProcessingIfZeroDocuments="true" updateRunDates="false" workload="general">
+      <shapes>
+<shape image="start" name="shape1" shapetype="start" userlabel="" x="48.0" y="48.0">
+  <configuration>
+<connectoraction actionType="Listen" allowDynamicCredentials="NONE" connectorType="wss" hideSettings="true" operationId="f87a7262-3e71-43b0-820b-0d2705fc0961"><parameters/><dynamicProperties/></connectoraction>
+  </configuration>
+  <dragpoints><dragpoint name="shape1.dragpoint1" toShape="shape2" x="224" y="56"/></dragpoints>
+</shape>
+<shape image="documentproperties_icon" name="shape2" shapetype="documentproperties" userlabel="Assign Request ID" x="240.0" y="48.0">
+  <configuration>
+<documentproperties>
+<documentproperty defaultValue="" isDynamicCredential="false" isTradingPartner="false" name="Dynamic Process Property - DPP_REQ_ID" persist="false" propertyId="process.DPP_REQ_ID" shouldEncrypt="false">
+  <sourcevalues>
+<parametervalue key="0" usesEncryption="false" valueType="static"><staticparameter staticproperty="req-"/></parametervalue>
+<parametervalue key="1" usesEncryption="false" valueType="date"><dateparameter dateparametertype="current" datetimemask="yyyyMMdd'T'HHmmssSSS"/></parametervalue>
+<parametervalue key="2" usesEncryption="false" valueType="static"><staticparameter staticproperty="-"/></parametervalue>
+<parametervalue key="3" usesEncryption="false" valueType="execution"><executionparameter executionproperty="Execution Id"/></parametervalue>
+  </sourcevalues>
+</documentproperty>
+<documentproperty defaultValue="" isDynamicCredential="false" isTradingPartner="false" name="Dynamic Process Property - DPP_CREATED_AT" persist="false" propertyId="process.DPP_CREATED_AT" shouldEncrypt="false">
+  <sourcevalues>
+<parametervalue key="0" usesEncryption="false" valueType="date"><dateparameter dateparametertype="current" datetimemask="yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"/></parametervalue>
+  </sourcevalues>
+</documentproperty>
+</documentproperties>
+  </configuration>
+  <dragpoints><dragpoint name="shape2.dragpoint1" toShape="shape3" x="416" y="56"/></dragpoints>
+</shape>
+<shape image="notify_icon" name="shape3" shapetype="notify" userlabel="Audit: Request Queued" x="432.0" y="48.0">
+  <configuration>
+<notify disableEvent="true" enableUserLog="false" perExecution="false" title="">
+  <notifyMessage>OMNIMFT_REQUEST | id={1} | request={2}</notifyMessage>
+  <notifyMessageLevel>INFO</notifyMessageLevel>
+  <notifyParameters>
+<parametervalue key="0" usesEncryption="false" valueType="process"><processparameter processproperty="DPP_REQ_ID" processpropertydefaultvalue=""/></parametervalue>
+<parametervalue key="1" valueType="current"/>
+  </notifyParameters>
+</notify>
+  </configuration>
+  <dragpoints><dragpoint name="shape3.dragpoint1" toShape="shape4" x="608" y="56"/></dragpoints>
+</shape>
+<shape image="message_icon" name="shape4" shapetype="message" userlabel="Build Request Envelope" x="624.0" y="48.0">
+  <configuration>
+<message combined="false">
+  <msgTxt>'{&quot;requestId&quot;: &quot;'{1}'&quot;, &quot;createdAt&quot;: &quot;'{2}'&quot;, &quot;request&quot;: '{3}'}'</msgTxt>
+  <msgParameters>
+<parametervalue key="0" usesEncryption="false" valueType="process"><processparameter processproperty="DPP_REQ_ID" processpropertydefaultvalue=""/></parametervalue>
+<parametervalue key="1" usesEncryption="false" valueType="process"><processparameter processproperty="DPP_CREATED_AT" processpropertydefaultvalue=""/></parametervalue>
+<parametervalue key="2" valueType="current"/>
+  </msgParameters>
+</message>
+  </configuration>
+  <dragpoints><dragpoint name="shape4.dragpoint1" toShape="shape5" x="800" y="56"/></dragpoints>
+</shape>
+<shape image="documentproperties_icon" name="shape5" shapetype="documentproperties" userlabel="Set File Name" x="816.0" y="48.0">
+  <configuration>
+<documentproperties>
+<documentproperty defaultValue="" isDynamicCredential="false" isTradingPartner="false" name="Disk v2 - File Name" persist="false" propertyId="connector.disk-sdk.fileName" shouldEncrypt="false">
+  <sourcevalues>
+<parametervalue key="0" usesEncryption="false" valueType="static"><staticparameter staticproperty="requests/"/></parametervalue>
+<parametervalue key="1" usesEncryption="false" valueType="process"><processparameter processproperty="DPP_REQ_ID" processpropertydefaultvalue=""/></parametervalue>
+<parametervalue key="2" usesEncryption="false" valueType="static"><staticparameter staticproperty=".json"/></parametervalue>
+  </sourcevalues>
+</documentproperty>
+</documentproperties>
+  </configuration>
+  <dragpoints><dragpoint name="shape5.dragpoint1" toShape="shape6" x="992" y="56"/></dragpoints>
+</shape>
+<shape image="connectoraction_icon" name="shape6" shapetype="connectoraction" userlabel="Write Request" x="1008.0" y="48.0">
+  <configuration>
+<connectoraction actionType="UPSERT" allowDynamicCredentials="NONE" connectionId="c9bd0c83-f253-4221-be5f-e4791a37ceb2" connectorType="disk-sdk" hideSettings="false" operationId="ec256248-eb54-4937-ae3f-dcf44b5f825a"><parameters></parameters><dynamicProperties/></connectoraction>
+  </configuration>
+  <dragpoints><dragpoint name="shape6.dragpoint1" toShape="shape7" x="1184" y="56"/></dragpoints>
+</shape>
+<shape image="message_icon" name="shape7" shapetype="message" userlabel="Build Ack" x="1200.0" y="48.0">
+  <configuration>
+<message combined="false">
+  <msgTxt>'{&quot;ok&quot;: true, &quot;requestId&quot;: &quot;'{1}'&quot;, &quot;status&quot;: &quot;QUEUED&quot;, &quot;next&quot;: &quot;call get_request_result with this requestId&quot;}'</msgTxt>
+  <msgParameters>
+<parametervalue key="0" usesEncryption="false" valueType="process"><processparameter processproperty="DPP_REQ_ID" processpropertydefaultvalue=""/></parametervalue>
+  </msgParameters>
+</message>
+  </configuration>
+  <dragpoints><dragpoint name="shape7.dragpoint1" toShape="shape8" x="1376" y="56"/></dragpoints>
+</shape>
+<shape image="returndocuments_icon" name="shape8" shapetype="returndocuments" userlabel="HTTP Response" x="1392.0" y="48.0">
+  <configuration>
+<returndocuments label="HTTP Response"/>
+  </configuration>
+  <dragpoints/>
+</shape>
+      </shapes>
+    </process>
+  </bns:object>
+  <bns:processOverrides/>
+</bns:Component>

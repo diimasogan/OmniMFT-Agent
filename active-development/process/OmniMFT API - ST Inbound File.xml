@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bns:Component xmlns:bns="http://api.platform.boomi.com/"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               componentId="115d58f8-ac63-47ed-8b12-feeed7fc74be" name="OmniMFT API - ST Inbound File" type="process" folderId="Rjo4OTYzOTM1">
+  <bns:encryptedValues/>
+  <bns:description>WSS listener receiving files pushed by Axway SecureTransport. Endpoint: POST /ws/simple/executeStInboundFile?filename=&amp;account=&amp;trackingId= . Logic lives in [SUB] OmniMFT - Receive ST File. | built with boomi-companion v1.0.103</bns:description>
+  <bns:object>
+    <process allowSimultaneous="true" enableUserLog="false" processLogOnErrorOnly="false" purgeDataImmediately="false" stopProcessingIfZeroDocuments="true" updateRunDates="false" workload="general">
+      <shapes>
+<shape image="start" name="shape1" shapetype="start" userlabel="" x="48.0" y="48.0">
+  <configuration>
+<connectoraction actionType="Listen" allowDynamicCredentials="NONE" connectorType="wss" hideSettings="true" operationId="86cbad9c-3faf-4242-bc65-277206a20359"><parameters/><dynamicProperties/></connectoraction>
+  </configuration>
+  <dragpoints><dragpoint name="shape1.dragpoint1" toShape="shape2" x="224" y="56"/></dragpoints>
+</shape>
+<shape image="processcall_icon" name="shape2" shapetype="processcall" userlabel="Receive ST File" x="240.0" y="48.0">
+  <configuration>
+<processcall abort="true" processId="ce17901d-ca9f-45de-ae1f-aae2cd1c8783" wait="true"><parameters/><returnpaths><returnpaths childShapeName="shape5"/></returnpaths></processcall>
+  </configuration>
+  <dragpoints><dragpoint identifier="shape5" name="shape2.dragpoint1" text="Receipt" toShape="shape3" x="416" y="56"/></dragpoints>
+</shape>
+<shape image="returndocuments_icon" name="shape3" shapetype="returndocuments" userlabel="HTTP Response" x="432.0" y="48.0">
+  <configuration>
+<returndocuments label="HTTP Response"/>
+  </configuration>
+  <dragpoints/>
+</shape>
+      </shapes>
+    </process>
+  </bns:object>
+  <bns:processOverrides/>
+</bns:Component>

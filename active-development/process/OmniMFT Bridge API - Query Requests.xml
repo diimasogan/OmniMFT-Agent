@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bns:Component xmlns:bns="http://api.platform.boomi.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               componentId="bcad5191-22d0-439c-9d89-d65a8fc96d67" name="OmniMFT Bridge API - Query Requests" type="process" folderId="Rjo4OTYzOTM1">
+  <bns:encryptedValues/>
+  <bns:description>Outbound-only bridge: the on-prem OmniMFT worker lists queued request files. GET /ws/simple/queryOmnimftRequests returns one JSON line per file (fileName, createdDate, ...). Empty body when the queue directory does not exist yet. | built with boomi-companion v1.0.103</bns:description>
+  <bns:object>
+    <process allowSimultaneous="true" enableUserLog="false" processLogOnErrorOnly="false" purgeDataImmediately="false" stopProcessingIfZeroDocuments="true" updateRunDates="false" workload="general">
+      <shapes>
+<shape image="start" name="shape1" shapetype="start" userlabel="" x="48.0" y="48.0">
+  <configuration>
+<connectoraction actionType="Listen" allowDynamicCredentials="NONE" connectorType="wss" hideSettings="true" operationId="7e466f9d-e82c-4928-b364-0f6bf0f77ce6"><parameters/><dynamicProperties/></connectoraction>
+  </configuration>
+  <dragpoints><dragpoint name="shape1.dragpoint1" toShape="shape2" x="224" y="56"/></dragpoints>
+</shape>
+<shape image="catcherrors_icon" name="shape2" shapetype="catcherrors" userlabel="" x="240.0" y="48.0">
+  <configuration>
+<catcherrors catchAll="true" retryCount="0"/>
+  </configuration>
+  <dragpoints>
+    <dragpoint identifier="default" name="shape2.dragpoint1" text="Try" toShape="shape3" x="416" y="56"/>
+    <dragpoint identifier="error" name="shape2.dragpoint2" text="Catch" toShape="shape7" x="416" y="216"/>
+  </dragpoints>
+</shape>
+<shape image="documentproperties_icon" name="shape3" shapetype="documentproperties" userlabel="Point At Requests Folder" x="432.0" y="48.0">
+  <configuration>
+<documentproperties>
+<documentproperty defaultValue="" isDynamicCredential="false" isTradingPartner="false" name="Disk v2 - Directory" persist="false" propertyId="connector.disk-sdk.directory" shouldEncrypt="false">
+  <sourcevalues>
+<parametervalue key="0" usesEncryption="false" valueType="static"><staticparameter staticproperty="work/omnimft/requests"/></parametervalue>
+  </sourcevalues>
+</documentproperty>
+</documentproperties>
+  </configuration>
+  <dragpoints><dragpoint name="shape3.dragpoint1" toShape="shape4" x="608" y="56"/></dragpoints>
+</shape>
+<shape image="connectoraction_icon" name="shape4" shapetype="connectoraction" userlabel="List Request Files" x="624.0" y="48.0">
+  <configuration>
+<connectoraction actionType="LIST" allowDynamicCredentials="NONE" connectionId="c9bd0c83-f253-4221-be5f-e4791a37ceb2" connectorType="disk-sdk" hideSettings="false" operationId="344a91d1-5c7c-42f7-bdae-f48fa0f1c539" parameter-profile="EMBEDDED|genericparameterchooser|344a91d1-5c7c-42f7-bdae-f48fa0f1c539"><parameters><parametervalue elementToSetId="0" elementToSetName="isDirectory:EQUALS" key="0" usesEncryption="false" valueType="static"><staticparameter staticproperty="false"/></parametervalue></parameters><dynamicProperties/></connectoraction>
+  </configuration>
+  <dragpoints><dragpoint name="shape4.dragpoint1" toShape="shape5" x="800" y="56"/></dragpoints>
+</shape>
+<shape image="message_icon" name="shape5" shapetype="message" userlabel="Combine As JSON Lines" x="816.0" y="48.0">
+  <configuration>
+<message combined="true">
+  <msgTxt>{1}
+</msgTxt>
+  <msgParameters>
+<parametervalue key="0" valueType="current"/>
+  </msgParameters>
+</message>
+  </configuration>
+  <dragpoints><dragpoint name="shape5.dragpoint1" toShape="shape6" x="992" y="56"/></dragpoints>
+</shape>
+<shape image="returndocuments_icon" name="shape6" shapetype="returndocuments" userlabel="HTTP Response" x="1008.0" y="48.0">
+  <configuration>
+<returndocuments label="HTTP Response"/>
+  </configuration>
+  <dragpoints/>
+</shape>
+<shape image="message_icon" name="shape7" shapetype="message" userlabel="Empty Queue" x="432.0" y="208.0">
+  <configuration>
+<message combined="false">
+  <msgTxt></msgTxt>
+  <msgParameters>
+
+  </msgParameters>
+</message>
+  </configuration>
+  <dragpoints><dragpoint name="shape7.dragpoint1" toShape="shape8" x="608" y="216"/></dragpoints>
+</shape>
+<shape image="returndocuments_icon" name="shape8" shapetype="returndocuments" userlabel="Empty" x="624.0" y="208.0">
+  <configuration>
+<returndocuments label="Empty"/>
+  </configuration>
+  <dragpoints/>
+</shape>
+      </shapes>
+    </process>
+  </bns:object>
+  <bns:processOverrides/>
+</bns:Component>

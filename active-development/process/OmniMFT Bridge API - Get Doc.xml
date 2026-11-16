@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bns:Component xmlns:bns="http://api.platform.boomi.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               componentId="74e29c1a-b1cf-49ba-b5b8-7f7eb41ec4e2" name="OmniMFT Bridge API - Get Doc" type="process" folderId="Rjo4OTYzOTM1">
+  <bns:encryptedValues/>
+  <bns:description>Outbound-only bridge: Agentstudio tools read a snapshot or a request result. GET /ws/simple/getOmnimftDoc?kind=snapshots|results|requests&amp;name=&lt;name&gt;. Missing documents return NOT_FOUND. | built with boomi-companion v1.0.103</bns:description>
+  <bns:object>
+    <process allowSimultaneous="true" enableUserLog="false" processLogOnErrorOnly="false" purgeDataImmediately="false" stopProcessingIfZeroDocuments="false" updateRunDates="false" workload="general">
+      <shapes>
+<shape image="start" name="shape1" shapetype="start" userlabel="" x="48.0" y="48.0">
+  <configuration>
+<connectoraction actionType="Listen" allowDynamicCredentials="NONE" connectorType="wss" hideSettings="true" operationId="00a0d826-2039-473d-bc30-17f87a250290"><parameters/><dynamicProperties/></connectoraction>
+  </configuration>
+  <dragpoints><dragpoint name="shape1.dragpoint1" toShape="shape2" x="224" y="56"/></dragpoints>
+</shape>
+<shape image="documentproperties_icon" name="shape2" shapetype="documentproperties" userlabel="Build Document Key" x="240.0" y="48.0">
+  <configuration>
+<documentproperties>
+<documentproperty defaultValue="" isDynamicCredential="false" isTradingPartner="false" name="Dynamic Process Property - DPP_KEY" persist="false" propertyId="process.DPP_KEY" shouldEncrypt="false">
+  <sourcevalues>
+<parametervalue key="0" usesEncryption="false" valueType="process"><processparameter processproperty="query_kind" processpropertydefaultvalue=""/></parametervalue>
+<parametervalue key="1" usesEncryption="false" valueType="static"><staticparameter staticproperty="/"/></parametervalue>
+<parametervalue key="2" usesEncryption="false" valueType="process"><processparameter processproperty="query_name" processpropertydefaultvalue=""/></parametervalue>
+<parametervalue key="3" usesEncryption="false" valueType="static"><staticparameter staticproperty=".json"/></parametervalue>
+  </sourcevalues>
+</documentproperty>
+</documentproperties>
+  </configuration>
+  <dragpoints><dragpoint name="shape2.dragpoint1" toShape="shape3" x="416" y="56"/></dragpoints>
+</shape>
+<shape image="decision_icon" name="shape3" shapetype="decision" userlabel="Key Allowed?" x="432.0" y="48.0">
+  <configuration>
+<decision comparison="regex" name="Key Allowed?">
+  <decisionvalue valueType="process"><processparameter processproperty="DPP_KEY" processpropertydefaultvalue=""/></decisionvalue>
+  <decisionvalue valueType="static"><staticparameter staticproperty="^(snapshots|results|requests)/[A-Za-z0-9_.-]{1,120}\.json$"/></decisionvalue>
+</decision>
+  </configuration>
+  <dragpoints>
+    <dragpoint identifier="true" name="shape3.dragpoint1" text="True" toShape="shape4" x="608" y="56"/>
+    <dragpoint identifier="false" name="shape3.dragpoint2" text="False" toShape="shape8" x="608" y="536"/>
+  </dragpoints>
+</shape>
+<shape image="branch_icon" name="shape4" shapetype="branch" userlabel="" x="624.0" y="48.0">
+  <configuration>
+<branch numBranches="2"/>
+  </configuration>
+  <dragpoints>
+    <dragpoint identifier="1" name="shape4.dragpoint1" text="1" toShape="shape5" x="800" y="56"/>
+    <dragpoint identifier="2" name="shape4.dragpoint2" text="2" toShape="shape11" x="800" y="216"/>
+  </dragpoints>
+</shape>
+<shape image="connectoraction_icon" name="shape5" shapetype="connectoraction" userlabel="Read Document" x="816.0" y="48.0">
+  <configuration>
+<connectoraction actionType="GET" allowDynamicCredentials="NONE" connectionId="c9bd0c83-f253-4221-be5f-e4791a37ceb2" connectorType="disk-sdk" hideSettings="false" operationId="c3be16d3-3ff6-436c-8ff0-c91903c6e8a5" parameter-profile="EMBEDDED|genericparameterchooser|c3be16d3-3ff6-436c-8ff0-c91903c6e8a5"><parameters><parametervalue elementToSetId="0" elementToSetName="ID" key="0" usesEncryption="false" valueType="process"><processparameter processproperty="DPP_KEY" processpropertydefaultvalue=""/></parametervalue></parameters><dynamicProperties/></connectoraction>
+  </configuration>
+  <dragpoints><dragpoint name="shape5.dragpoint1" toShape="shape12" x="992" y="56"/></dragpoints>
+</shape>
+<shape image="documentproperties_icon" name="shape12" shapetype="documentproperties" userlabel="Flag Found" x="1008.0" y="48.0">
+  <configuration>
+<documentproperties>
+<documentproperty defaultValue="" isDynamicCredential="false" isTradingPartner="false" name="Dynamic Process Property - DPP_FOUND" persist="false" propertyId="process.DPP_FOUND" shouldEncrypt="false">
+  <sourcevalues>
+<parametervalue key="0" usesEncryption="false" valueType="static"><staticparameter staticproperty="true"/></parametervalue>
+  </sourcevalues>
+</documentproperty>
+</documentproperties>
+  </configuration>
+  <dragpoints><dragpoint name="shape12.dragpoint1" toShape="shape10" x="1184" y="56"/></dragpoints>
+</shape>
+<shape image="returndocuments_icon" name="shape10" shapetype="returndocuments" userlabel="HTTP Response" x="1200.0" y="48.0">
+  <configuration>
+<returndocuments label="HTTP Response"/>
+  </configuration>
+  <dragpoints/>
+</shape>
+<shape image="decision_icon" name="shape11" shapetype="decision" userlabel="Was Found?" x="816.0" y="208.0">
+  <configuration>
+<decision comparison="regex" name="Was Found?">
+  <decisionvalue valueType="process"><processparameter processproperty="DPP_FOUND" processpropertydefaultvalue="false"/></decisionvalue>
+  <decisionvalue valueType="static"><staticparameter staticproperty="^true$"/></decisionvalue>
+</decision>
+  </configuration>
+  <dragpoints>
+    <dragpoint identifier="true" name="shape11.dragpoint1" text="True" toShape="shape13" x="992" y="216"/>
+    <dragpoint identifier="false" name="shape11.dragpoint2" text="False" toShape="shape6" x="992" y="376"/>
+  </dragpoints>
+</shape>
+<shape image="stop_icon" name="shape13" shapetype="stop" userlabel="" x="1008.0" y="208.0">
+  <configuration>
+<stop continue="true"/>
+  </configuration>
+  <dragpoints/>
+</shape>
+<shape image="message_icon" name="shape6" shapetype="message" userlabel="Build Not Found" x="1008.0" y="368.0">
+  <configuration>
+<message combined="false">
+  <msgTxt>'{&quot;ok&quot;: false, &quot;status&quot;: &quot;NOT_FOUND&quot;, &quot;key&quot;: &quot;'{1}'&quot;}'</msgTxt>
+  <msgParameters>
+<parametervalue key="0" usesEncryption="false" valueType="process"><processparameter processproperty="DPP_KEY" processpropertydefaultvalue=""/></parametervalue>
+  </msgParameters>
+</message>
+  </configuration>
+  <dragpoints><dragpoint name="shape6.dragpoint1" toShape="shape7" x="1184" y="376"/></dragpoints>
+</shape>
+<shape image="returndocuments_icon" name="shape7" shapetype="returndocuments" userlabel="Not Found" x="1200.0" y="368.0">
+  <configuration>
+<returndocuments label="Not Found"/>
+  </configuration>
+  <dragpoints/>
+</shape>
+<shape image="message_icon" name="shape8" shapetype="message" userlabel="Build Rejection" x="624.0" y="528.0">
+  <configuration>
+<message combined="false">
+  <msgTxt>'{&quot;ok&quot;: false, &quot;error&quot;: &quot;INVALID_KEY&quot;, &quot;detail&quot;: &quot;kind/name not allowed&quot;}'</msgTxt>
+  <msgParameters>
+
+  </msgParameters>
+</message>
+  </configuration>
+  <dragpoints><dragpoint name="shape8.dragpoint1" toShape="shape9" x="800" y="536"/></dragpoints>
+</shape>
+<shape image="returndocuments_icon" name="shape9" shapetype="returndocuments" userlabel="Rejected" x="816.0" y="528.0">
+  <configuration>
+<returndocuments label="Rejected"/>
+  </configuration>
+  <dragpoints/>
+</shape>
+      </shapes>
+    </process>
+  </bns:object>
+  <bns:processOverrides/>
+</bns:Component>

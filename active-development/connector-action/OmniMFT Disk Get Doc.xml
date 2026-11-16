@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bns:Component xmlns:bns="http://api.platform.boomi.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               componentId="c3be16d3-3ff6-436c-8ff0-c91903c6e8a5" name="OmniMFT Disk Get Doc" type="connector-action" subType="disk-sdk" folderId="Rjo4OTYzOTM1">
+  <bns:encryptedValues/>
+  <bns:description>Read one JSON document by ID (kind/name.json). Never deletes. | built with boomi-companion v1.0.103</bns:description>
+  <bns:object>
+    <Operation returnApplicationErrors="false" trackResponse="true">
+      <Archiving directory="" enabled="false"/>
+      <Configuration>
+        <GenericOperationConfig objectTypeId="FILE" operationType="GET" requestProfileType="xml" responseProfileType="binary">
+          <field id="deleteAfter" type="boolean" value="false"/>
+          <field id="failDeleteAfter" type="boolean" value="false"/>
+          <Options><QueryOptions><Fields><ConnectorObject name="File"><FieldList/></ConnectorObject></Fields><Inputs><Input key="0" name="ID"/></Inputs></QueryOptions></Options>
+        </GenericOperationConfig>
+      </Configuration>
+      <Tracking><TrackedFields/></Tracking>
+      <Caching/>
+    </Operation>
+  </bns:object>
+</bns:Component>

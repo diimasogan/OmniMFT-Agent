@@ -1,0 +1,1009 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OmniMFT Ops Copilot</title>
+<style>
+:root{
+  --navy:#0B2545; --teal:#13A89E; --teal-ink:#0E7F77;
+  --bg:#F4F7FA; --surface:#FFFFFF; --surface-2:#EEF3F7; --line:#D9E2EA;
+  --ink:#10213A; --muted:#5B6B7F; --side:#0B2545; --side-ink:#E6EDF5; --side-muted:#93A6BD; --side-line:#1C3A5E;
+  --user:#0B2545; --user-ink:#FFFFFF; --bot:#FFFFFF;
+  --ok:#1E8E5A; --ok-bg:#E3F5EC; --warn:#B26A00; --warn-bg:#FFF2DB; --crit:#C62C3B; --crit-bg:#FDE6E8; --info:#2D6CB5; --info-bg:#E4EEFA;
+  --radius:12px; --shadow:0 1px 2px rgba(11,37,69,.06),0 4px 16px rgba(11,37,69,.06);
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#08172B; --surface:#0F2340; --surface-2:#132B4D; --line:#22406A; --ink:#E6EDF5; --muted:#93A6BD;
+  --side:#061223; --side-line:#17304F; --user:#13A89E; --user-ink:#04201E; --bot:#0F2340; --teal-ink:#3FD0C4;
+  --ok:#4CC98C; --ok-bg:#0E3326; --warn:#F2B451; --warn-bg:#3A2A0C; --crit:#FF7A86; --crit-bg:#41161C; --info:#7FB2F0; --info-bg:#132E52;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.25); color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#08172B; --surface:#0F2340; --surface-2:#132B4D; --line:#22406A; --ink:#E6EDF5; --muted:#93A6BD;
+  --side:#061223; --side-line:#17304F; --user:#13A89E; --user-ink:#04201E; --bot:#0F2340; --teal-ink:#3FD0C4;
+  --ok:#4CC98C; --ok-bg:#0E3326; --warn:#F2B451; --warn-bg:#3A2A0C; --crit:#FF7A86; --crit-bg:#41161C; --info:#7FB2F0; --info-bg:#132E52;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.25); color-scheme:dark;}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--teal-ink)}
+code,pre{font-family:var(--mono);font-size:12.5px}
+.app{display:grid;grid-template-columns:280px 1fr;height:100vh}
+/* sidebar */
+.side{background:var(--side);color:var(--side-ink);display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--side-line)}
+.brand{display:flex;align-items:center;gap:10px;padding:18px 18px 14px}
+.logo{width:34px;height:34px;border-radius:9px;background:var(--teal);display:grid;place-items:center;flex:none}
+.brand b{display:block;font-size:15px;letter-spacing:.2px}
+.brand small{color:var(--side-muted);font-size:11.5px}
+.nav{padding:6px 10px;display:flex;flex-direction:column;gap:2px}
+.nav button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;color:var(--side-ink);padding:9px 10px;border-radius:8px}
+.nav button:hover{background:rgba(255,255,255,.06)}
+.nav button[aria-current="page"]{background:rgba(19,168,158,.18);color:#fff;box-shadow:inset 3px 0 0 var(--teal)}
+.nav svg{width:18px;height:18px;flex:none;opacity:.9}
+.side h4{margin:16px 18px 8px;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--side-muted);font-weight:600}
+.health{margin:0 12px;padding:12px;border:1px solid var(--side-line);border-radius:10px;background:rgba(255,255,255,.03)}
+.hrow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 0;font-size:12.5px}
+.hrow span:first-child{color:var(--side-muted)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px;background:var(--side-muted)}
+.dot.ok{background:#3DDC97}.dot.warn{background:#F2B451}.dot.crit{background:#FF6B78}
+.side-foot{margin-top:auto;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--side-line);font-size:12px;color:var(--side-muted)}
+.icon-btn{background:none;border:1px solid var(--side-line);color:var(--side-ink);border-radius:8px;padding:6px 9px;display:inline-flex;gap:6px;align-items:center}
+.icon-btn svg{width:16px;height:16px}
+/* main */
+.main{display:flex;flex-direction:column;min-width:0;min-height:0}
+.top{display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--surface)}
+.top h1{font-size:16px;margin:0;font-weight:650}
+.top .sub{color:var(--muted);font-size:12.5px}
+.mode{margin-left:auto;font-size:11px;font-weight:700;letter-spacing:.6px;padding:4px 9px;border-radius:999px}
+.mode.sim{background:var(--warn-bg);color:var(--warn)}.mode.live{background:var(--ok-bg);color:var(--ok)}
+.burger{display:none;background:none;border:1px solid var(--line);border-radius:8px;padding:6px}
+.view{flex:1;min-height:0;overflow:auto}
+.view[hidden]{display:none}
+/* chat */
+.chat{display:flex;flex-direction:column;height:100%}
+.msgs{flex:1;overflow:auto;padding:22px 20px 8px}
+.wrap{max-width:920px;margin:0 auto}
+.msg{display:flex;gap:10px;margin:0 0 16px}
+.msg.user{justify-content:flex-end}
+.avatar{width:30px;height:30px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:12px;font-weight:700}
+.msg.bot .avatar{background:var(--teal);color:#fff}
+.bubble{max-width:min(760px,88%);padding:11px 14px;border-radius:14px;box-shadow:var(--shadow);overflow-wrap:anywhere}
+.msg.user .bubble{background:var(--user);color:var(--user-ink);border-bottom-right-radius:4px}
+.msg.bot .bubble{background:var(--bot);border:1px solid var(--line);border-bottom-left-radius:4px;min-width:0}
+.bubble p{margin:0 0 8px}.bubble p:last-child{margin-bottom:0}
+.bubble h5{margin:12px 0 6px;font-size:13px}
+.meta{font-size:11px;color:var(--muted);margin-top:6px}
+.msg.user .meta{color:inherit;opacity:.7;text-align:right}
+.typing{display:inline-flex;gap:4px;align-items:center;color:var(--muted)}
+.typing i{width:6px;height:6px;border-radius:50%;background:var(--teal);animation:b 1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes b{0%,80%,100%{opacity:.25}40%{opacity:1}}
+.composer{border-top:1px solid var(--line);background:var(--surface);padding:12px 20px 16px}
+.composer form{display:flex;gap:10px;align-items:flex-end}
+.composer textarea{flex:1;resize:none;min-height:44px;max-height:160px;padding:11px 13px;border:1px solid var(--line);border-radius:12px;background:var(--bg);outline:none}
+.composer textarea:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(19,168,158,.18)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:8px 14px;font-weight:600}
+.btn:hover{border-color:var(--teal)}
+.btn.primary{background:var(--teal);border-color:var(--teal);color:#fff}
+.btn.primary:hover{background:var(--teal-ink);border-color:var(--teal-ink)}
+.btn.danger{color:var(--crit);border-color:var(--crit)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.send{height:44px;width:48px;padding:0;display:grid;place-items:center}
+.hint{font-size:11.5px;color:var(--muted);margin-top:6px}
+/* starters */
+.starters{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin:8px 0 4px}
+.starter{text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;display:flex;gap:10px;align-items:flex-start;box-shadow:var(--shadow)}
+.starter:hover{border-color:var(--teal);transform:translateY(-1px)}
+.starter .n{flex:none;width:24px;height:24px;border-radius:7px;background:rgba(19,168,158,.14);color:var(--teal-ink);display:grid;place-items:center;font-weight:700;font-size:12px}
+.starter small{display:block;color:var(--muted);font-size:11.5px;margin-top:2px}
+.hero{text-align:center;padding:26px 0 10px}
+.hero h2{margin:8px 0 4px;font-size:22px}
+.hero p{color:var(--muted);margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:4px 10px;font-size:12px}
+.chip:hover{border-color:var(--teal);color:var(--teal-ink)}
+/* data */
+.tbl{width:100%;border-collapse:collapse;margin:6px 0;font-size:12.5px}
+.tbl th,.tbl td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{color:var(--muted);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.4px}
+.scroll{overflow-x:auto;max-width:100%}
+.badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.b-ok{background:var(--ok-bg);color:var(--ok)}.b-warn{background:var(--warn-bg);color:var(--warn)}
+.b-crit{background:var(--crit-bg);color:var(--crit)}.b-info{background:var(--info-bg);color:var(--info)}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+.stat{background:var(--surface-2);border-radius:10px;padding:8px 12px;min-width:110px}
+.stat b{display:block;font-size:18px}.stat span{font-size:11.5px;color:var(--muted)}
+pre.cmd{background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;overflow:auto;white-space:pre-wrap;margin:4px 0}
+details{margin-top:8px}summary{cursor:pointer;color:var(--muted);font-size:12px}
+.note{border-left:3px solid var(--info);background:var(--info-bg);padding:8px 10px;border-radius:6px;margin:8px 0;font-size:12.5px}
+.note.warn{border-color:var(--warn);background:var(--warn-bg)}.note.crit{border-color:var(--crit);background:var(--crit-bg)}
+ol.plan{margin:6px 0;padding-left:20px}ol.plan li{margin:3px 0}
+/* approval card */
+.approve{border:1px solid var(--warn);border-radius:12px;margin-top:10px;overflow:hidden;background:var(--surface)}
+.approve header{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--warn-bg);color:var(--warn);font-weight:700;font-size:12.5px}
+.approve .body{padding:10px 12px}
+.approve .actions{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line);align-items:center;flex-wrap:wrap}
+.approve .decided{font-size:12px;color:var(--muted);margin-left:auto}
+.approve.done{border-color:var(--line)}.approve.done header{background:var(--surface-2);color:var(--muted)}
+.fgrid{display:grid;grid-template-columns:120px 1fr;gap:6px 10px;align-items:center}
+.fgrid label{font-size:12px;color:var(--muted)}
+.fgrid input,.fgrid select,.fgrid textarea,.form input,.form select{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+/* pages */
+.page{padding:22px 20px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);min-width:0}
+.card h3{margin:0 0 8px;font-size:13px;color:var(--muted);font-weight:600}
+.card .big{font-size:20px;font-weight:700}
+.form{display:grid;gap:14px;max-width:640px}
+.form .row label{display:block;font-weight:600;margin-bottom:4px}
+.form .row small{color:var(--muted);display:block;margin-top:4px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{border:0;background:var(--surface);padding:7px 14px}
+.seg button[aria-pressed="true"]{background:var(--teal);color:#fff}
+.toast{position:fixed;right:16px;bottom:16px;background:var(--navy);color:#fff;padding:10px 14px;border-radius:10px;box-shadow:var(--shadow);opacity:0;transform:translateY(8px);transition:.2s;pointer-events:none;z-index:50}
+.toast.show{opacity:1;transform:none}
+.scrim{display:none}
+@media (max-width:860px){
+  .app{grid-template-columns:1fr}
+  .side{position:fixed;inset:0 auto 0 0;width:min(300px,86vw);z-index:40;transform:translateX(-100%);transition:transform .2s}
+  .side.open{transform:none}
+  .scrim.open{display:block;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:30}
+  .burger{display:inline-grid;place-items:center}
+  .top,.composer,.msgs,.page{padding-left:16px;padding-right:16px}
+  .top .sub{display:none}
+  .fgrid{grid-template-columns:1fr}
+  .bubble{max-width:100%}
+  .msg .avatar{display:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side" id="side">
+    <div class="brand">
+      <div class="logo"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h11l-3-3M20 17H9l3 3"/></svg></div>
+      <div><b>OmniMFT Ops Copilot</b><small>SecureTransport × Boomi</small></div>
+    </div>
+    <nav class="nav" aria-label="Main">
+      <button data-view="chat" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>Chat Copilot</button>
+      <button data-view="health"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>Bridge Health &amp; Status</button>
+      <button data-view="starters"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>Starter Prompts</button>
+      <button data-view="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Boomi Endpoint Config</button>
+    </nav>
+    <h4>Bridge health</h4>
+    <div class="health" id="healthWidget">
+      <div class="hrow"><span>SecureTransport</span><span id="hST"><i class="dot"></i>…</span></div>
+      <div class="hrow"><span>Last snapshot</span><span id="hAge">…</span></div>
+      <div class="hrow"><span>Bridge worker</span><span id="hWorker"><i class="dot"></i>…</span></div>
+      <div class="hrow"><span>Boomi API</span><span id="hBoomi"><i class="dot"></i>…</span></div>
+    </div>
+    <div class="side-foot">
+      <span id="footMode">Simulation</span>
+      <button class="icon-btn" id="themeBtn" title="Toggle theme" aria-label="Toggle theme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><span id="themeLbl">Theme</span></button>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <main class="main">
+    <div class="top">
+      <button class="burger" id="burger" aria-label="Menu"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+      <div><h1 id="title">Chat Copilot</h1><div class="sub" id="subtitle">Track transfers, audit certificates, onboard partners and resubmit through Boomi</div></div>
+      <span class="mode sim" id="modeBadge">SIMULATION</span>
+    </div>
+
+    <section class="view" id="view-chat">
+      <div class="chat">
+        <div class="msgs" id="msgs"><div class="wrap" id="thread"></div></div>
+        <div class="composer"><div class="wrap">
+          <form id="form">
+            <textarea id="input" rows="1" placeholder="Ask about transfers, certificates, partners…  (Enter to send, Shift+Enter for a new line)"></textarea>
+            <button class="btn primary send" id="sendBtn" aria-label="Send"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg></button>
+          </form>
+          <div class="hint">Sensitive actions (resubmit, onboarding, notifications) always require your approval before anything is sent.</div>
+        </div></div>
+      </div>
+    </section>
+
+    <section class="view" id="view-health" hidden><div class="page"><div class="wrap" id="healthPage"></div></div></section>
+    <section class="view" id="view-starters" hidden><div class="page"><div class="wrap">
+      <p style="color:var(--muted);margin-top:0">Pick a scenario. It opens in Chat Copilot and runs against the current mode.</p>
+      <div class="starters" id="startersPage"></div>
+    </div></div></section>
+    <section class="view" id="view-settings" hidden><div class="page"><div class="wrap">
+      <form class="form" id="settingsForm">
+        <div class="row"><label>Mode</label>
+          <div class="seg" id="modeSeg"><button type="button" data-mode="simulation">Simulation</button><button type="button" data-mode="live">Live (Boomi bridge)</button></div>
+          <small>Simulation uses built-in sample data so you can try every flow offline. Live calls the Boomi OmniMFT bridge listeners.</small></div>
+        <div class="row"><label for="cfgBase">Boomi WSS endpoint base</label>
+          <input id="cfgBase" placeholder="/api" autocomplete="off">
+          <small>Default <code>/api</code> = the local proxy <code>portal/portal_server.py</code>, which adds the Boomi credentials from <code>.env</code>.
+          A direct URL such as <code>https://c01-sg.integrate-test.boomi.com/ws/simple</code> will be blocked by the browser: Boomi does not allow cross-origin calls (CORS).</small></div>
+        <div class="row"><label for="cfgEmail">Default e-mail recipients</label>
+          <input id="cfgEmail" placeholder="empty = default ops recipient on the Boomi operation" autocomplete="off"><small>Separate several addresses with <code>;</code></small></div>
+        <div class="row"><label for="cfgWa">Default WhatsApp numbers</label>
+          <input id="cfgWa" placeholder="empty = default number baked into the Boomi process" autocomplete="off"><small>International format without spaces, e.g. 6281234567890; separate with <code>;</code></small></div>
+        <div class="row"><label for="cfgPoll">Result polling</label>
+          <select id="cfgPoll"><option value="2000">every 2 s</option><option value="3000">every 3 s</option><option value="5000">every 5 s</option></select>
+          <small>Queued bridge requests usually finish in 10–30 s. Polling stops after 2 minutes.</small></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" type="submit">Save settings</button><button class="btn" type="button" id="testBtn">Test connection</button></div>
+        <div id="testOut"></div>
+      </form>
+    </div></div></section>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ======================================================================= utilities */
+const $ = (s, r = document) => r.querySelector(s);
+const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* storage unavailable */ } }
+};
+const DEFAULTS = { mode: "simulation", base: "/api", pollMs: 3000, emailTo: "", waTo: "" };
+let cfg = { ...DEFAULTS, ...store.get("omnimft.cfg", {}) };
+// ?mode=live or ?mode=simulation switches (and remembers) the mode, then cleans the address bar
+(() => {
+  const m = new URLSearchParams(location.search).get("mode");
+  if (m === "live" || m === "simulation") {
+    cfg = { ...cfg, mode: m, base: m === "live" && isDirectUrl(cfg.base) ? "/api" : cfg.base };
+    store.set("omnimft.cfg", cfg);
+    try { history.replaceState(null, "", location.pathname); } catch { /* ignore */ }
+  }
+  function isDirectUrl(b) { return /^https?:\/\//i.test(b || ""); }
+})();
+const nowTime = () => new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+function toast(t) { const el = $("#toast"); el.textContent = t; el.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("show"), 2400); }
+function parseTime(s) { if (!s) return null; const t = Date.parse(s); return isNaN(t) ? null : new Date(t); }
+function fmtTime(s) { const d = parseTime(s); return d ? d.toLocaleString([], { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : esc(s || "—"); }
+function ageOf(iso) {
+  const d = parseTime(iso); if (!d) return { text: "unknown", sec: Infinity };
+  const s = Math.max(0, (Date.now() - d) / 1000);
+  const text = s < 60 ? `${Math.round(s)} s ago` : s < 3600 ? `${Math.round(s / 60)} min ago` : `${(s / 3600).toFixed(1)} h ago`;
+  return { text, sec: s };
+}
+function badge(status) {
+  const s = String(status ?? "—"), u = s.toUpperCase();
+  const cls = /^(PROCESSED|COMPLETE|DONE|SENT|OK|VALID|HEALTHY|RUNNING)$/.test(u) ? "b-ok"
+    : /^(WARNING|INCOMPLETE|IN PROGRESS|WAITING|PAUSED|PENDING|QUEUED)$/.test(u) ? "b-warn"
+    : /^(FAILED|CRITICAL|EXPIRED|ERROR|REJECTED|ABORTED|ORPHANED_ROUTES|STOPPED)$/.test(u) ? "b-crit" : "b-info";
+  return `<span class="badge ${cls}">${esc(s)}</span>`;
+}
+function table(cols, rows) {
+  if (!rows.length) return `<p class="meta">No rows.</p>`;
+  return `<div class="scroll"><table class="tbl"><thead><tr>${cols.map(c => `<th>${esc(c[0])}</th>`).join("")}</tr></thead><tbody>${
+    rows.map(r => `<tr>${cols.map(c => `<td>${c[1](r)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+}
+const rawJson = (o, label = "Raw response") => `<details><summary>${esc(label)}</summary><pre class="cmd">${esc(JSON.stringify(o, null, 2))}</pre></details>`;
+const isDirectBoomi = () => /^https?:\/\//i.test(cfg.base) && !/^https?:\/\/(localhost|127\.0\.0\.1)/i.test(cfg.base);
+
+/* ======================================================================= live API (Boomi bridge listeners) */
+async function http(path, opts = {}) {
+  const url = cfg.base.replace(/\/+$/, "") + path;
+  let r;
+  try {
+    r = await fetch(url, { ...opts, headers: { Accept: "application/json", "Content-Type": "application/json", "X-OmniMFT-Portal": "1" } });
+  } catch {
+    throw new Error(isDirectBoomi()
+      ? `The browser blocked the call to ${cfg.base}. Boomi listeners do not allow cross-origin requests (CORS); use the local proxy: set the endpoint base to /api and run portal/portal_server.py.`
+      : `Cannot reach ${url}. Is portal/portal_server.py running?`);
+  }
+  const text = await r.text();
+  if (r.status === 404 && cfg.base === "/api" && /<html|File not found/i.test(text))
+    throw new Error("This page is served by a plain static server, so /api does not exist. Start the portal with: python3 -I portal/portal_server.py");
+  if (!r.ok) throw new Error(`HTTP ${r.status} from ${path.split("?")[0]}: ${text.slice(0, 200)}`);
+  if (!text.trim()) return null;
+  try { return JSON.parse(text); } catch { return { raw: text }; }
+}
+const Live = {
+  snapshot: name => http(`/getOmnimftDoc?kind=snapshots&name=${encodeURIComponent(name)}`),
+  async request(action, params = {}) {
+    const body = { action };
+    for (const [k, v] of Object.entries(params)) if (v !== undefined && v !== null && v !== "") body[k] = String(v);
+    const r = await http("/createOmnimftRequest", { method: "POST", body: JSON.stringify(body) });
+    const id = r && (r.requestId || r.request_id || r.id);
+    if (!id) throw new Error("The bridge queue did not return a requestId: " + JSON.stringify(r).slice(0, 200));
+    return id;
+  },
+  result: id => http(`/getOmnimftDoc?kind=results&name=${encodeURIComponent(id)}`),
+  notify: p => http("/createOmnimftNotification?" + new URLSearchParams(Object.entries(p).filter(([, v]) => v)), { method: "POST", body: "{}" }),
+  async worker() {
+    try { const r = await fetch("/local/bridge"); if (r.ok) return (await r.json()).running ? "running" : "stopped"; } catch { /* no proxy */ }
+    return null;
+  }
+};
+
+/* ======================================================================= simulation API */
+const Sim = (() => {
+  const ago = h => new Date(Date.now() - h * 3600e3).toUTCString();
+  const iso = () => new Date().toISOString();
+  const ref = n => btoa(`Id [mTransferStatusId=sim-${n}-${"x".repeat(30)}]`);
+  const failed = [
+    { tracking_id: "sim-7f3a-01", ref: ref(1), status: "Failed", direction: "outbound", initiated_by: "ST (server-initiated)", filename: "Invoice 3245442957.pdf", size_bytes: 48213, protocol: "ssh", sender: "ST account 'RTGS' (/Basic Application)", receiver: "02_ts_ssh_to_inbox:/usecase/inbox", transfer_site: "02_ts_ssh_to_inbox", start_time: ago(5), duration: "3.278 s", error_message: "Auth fail for user mftadmin", diagnosis: "The SSH target rejected the login. Update the password or key on transfer site 02_ts_ssh_to_inbox (or the target account) and resubmit." },
+    { tracking_id: "sim-7f3a-02", ref: ref(2), status: "Failed", direction: "outbound", initiated_by: "ST (server-initiated)", filename: "empty_batch.csv", size_bytes: 0, protocol: "http", sender: "ST account 'omnimft_e2e' (/inbound)", receiver: "omnimft_e2e_boomi → Boomi executeStInboundFile", transfer_site: "omnimft_e2e_boomi", start_time: ago(29), duration: "1.104 s", error_message: "HTTP 400 ST_INBOUND_REJECTED: empty file", diagnosis: "Boomi rejects empty files. Ask the partner to resend a non-empty file; resubmitting the same empty file will fail again." },
+    { tracking_id: "sim-7f3a-03", ref: ref(3), status: "Failed", direction: "outbound", initiated_by: "ST (server-initiated)", filename: "PO_20261108.xml", size_bytes: 9120, protocol: "ssh", sender: "ST account 'RTGS' (/Basic Application)", receiver: "02_ts_ssh_to_inbox:/usecase/inbox", transfer_site: "02_ts_ssh_to_inbox", start_time: ago(101), duration: "3.010 s", error_message: "Auth fail for user mftadmin", diagnosis: "The SSH target rejected the login. Update the password or key on transfer site 02_ts_ssh_to_inbox (or the target account) and resubmit." }
+  ];
+  const recent = [
+    { tracking_id: "sim-a1", status: "Processed", direction: "inbound", filename: "orders_1113.csv", size_bytes: 20480, protocol: "ssh", sender: "partner omnimft_e2e", receiver: "ST /inbound", start_time: ago(1), duration: "212 ms" },
+    { tracking_id: "sim-a2", status: "Processed", direction: "outbound", filename: "orders_1113.csv", size_bytes: 20480, protocol: "http", sender: "ST", receiver: "Boomi executeStInboundFile", start_time: ago(1), duration: "1.4 s" },
+    failed[0]
+  ];
+  const snaps = {
+    health: () => ({ syncedAt: iso(), worker: "omnimft-bridge 1.0 (simulated)", pollSeconds: 5, snapshotSeconds: 60,
+      secure_transport: { ok: true, version: "5.5-20261029", update: "5.5_UPDATE-20261029" }, boomi: { configured: true, missing: [] } }),
+    transfers: () => ({ syncedAt: iso(), window: "last 24h (max 50) + failed last 7 days (max 30)",
+      recent: { ok: true, count: recent.length, total_matching: recent.length, transfers: recent },
+      failed_7d: { ok: true, count: failed.length, total_matching: failed.length, transfers: failed } }),
+    certificates: () => ({ syncedAt: iso(), ok: true, window_days: 30, summary: { expired: 1, expiring: 1, no_expiry_date: 4 },
+      expired: [{ name: "ca-old-partner-root", type: "x509", usage: "trusted", expires: ago(225 * 24), days_left: -225, validation_status: "Expired", severity: "CRITICAL",
+        subject: "CN=Old Partner Root CA", remediation: { action: "Obtain the renewed CA/partner certificate from the issuer and import it into ST (Certificates > Trusted CAs), then remove the expired one after confirmation.",
+        wsl_commands: ["openssl x509 -in renewed_ca.pem -noout -subject -enddate"] } }],
+      expiring: [{ name: "entrust-root-ca", type: "x509", usage: "trusted", expires: new Date(Date.now() + 14 * 864e5).toUTCString(), days_left: 14, validation_status: "Valid", severity: "WARNING",
+        subject: "CN=Entrust Root Certification Authority", remediation: { action: "Obtain the renewed CA certificate from the issuer and import it into ST before it expires.",
+        wsl_commands: ["openssl x509 -in entrust_root_new.pem -noout -subject -enddate"] } }] }),
+    boomi_inbound: () => ({ syncedAt: iso(), ok: true, count: 2, executions: [
+      { executionTime: ago(1), status: "COMPLETE", message: "ST_INBOUND_OK orders_1113.csv (20480 bytes)" },
+      { executionTime: ago(29), status: "ERROR", message: "ST_INBOUND_REJECTED empty_batch.csv" }] })
+  };
+  const pending = new Map();
+  const onboarded = new Set();
+  function compute({ action, p }) {
+    switch (action) {
+      case "refresh_snapshots": return { ok: true, message: "snapshots refreshed" };
+      case "track_transfers": {
+        const acc = (p.account || "").toLowerCase();
+        let rows = [...failed, ...recent.filter(x => !failed.includes(x))].filter(x => !acc || (x.sender || "").toLowerCase().includes(`'${acc}'`) || (x.sender || "").toLowerCase().includes(` ${acc}`));
+        if (p.status) rows = rows.filter(x => x.status === p.status);
+        return { ok: true, count: rows.length, total_matching: rows.length, transfers: rows.slice(0, Number(p.limit) || 10) };
+      }
+      case "resubmit_transfer": {
+        const t = failed.find(x => x.ref === p.ref);
+        return t ? { ok: true, filename: t.filename, account: t.sender.match(/'([^']+)'/)?.[1], previous_status: "Failed", resubmitted: "this transfer", st_response: { message: "Resubmit accepted" } }
+                 : { ok: false, error: "ref not found" };
+      }
+      case "check_partner": {
+        const all = [
+          { partner: "omnimft_e2e", status: "COMPLETE", route: "boomi", findings: [] },
+          { partner: "PT_Demo_Logistik", status: "INCOMPLETE", route: "both", findings: [
+            { severity: "CRITICAL", finding: "Advanced Routing COMPOSITE route is missing", fix: "Re-run onboarding for PT_Demo_Logistik (it recreates the routes after approval)." },
+            { severity: "WARNING", finding: "Local secret file secrets/PT_Demo_Logistik.txt not found", fix: "Reset the partner password in ST and store it in secrets/." }] },
+          { partner: "PT_Old_Vendor", status: "ORPHANED_ROUTES", route: "both", findings: [
+            { severity: "WARNING", finding: "SIMPLE/TEMPLATE routes exist without an account", fix: "Onboarding the same name removes them, or delete them in ST Admin." }] },
+          ...[...onboarded].map(n => ({ partner: n, status: "COMPLETE", route: "both", findings: [] }))
+        ];
+        if (p.partner_name) {
+          const one = all.find(x => x.partner.toLowerCase() === p.partner_name.toLowerCase());
+          return { ok: true, ...(one || { partner: p.partner_name, account_exists: false, routes_found: [], status: "NOT_FOUND", findings: [] }) };
+        }
+        const summary = {}; all.forEach(r => summary[r.status] = (summary[r.status] || 0) + 1);
+        return { ok: true, partners_checked: all.length, summary, partners: all };
+      }
+      case "onboard_partner": {
+        const n = p.partner_name, route = p.route || "boomi", folder = p.inbound_folder || "inbound";
+        if (!/^[A-Za-z][A-Za-z0-9_.-]{2,63}$/.test(n || "")) return { ok: false, error: "partner_name must start with a letter, 3-64 chars of letters, digits, _ . -" };
+        const sites = route === "ssh" ? [`${n}_ssh`] : route === "both" ? [`${n}_boomi`, `${n}_ssh`] : [`${n}_boomi`];
+        if (p.dry_run === "true") {
+          const plan = [
+            { step: 1, action: `create account ${n} (SFTP login, home /${n}, generated password stored on the bridge host)`, endpoint: "POST /accounts" },
+            ...sites.map((s, i) => ({ step: 2 + i, action: s.endsWith("_boomi") ? `create Generic-HTTP(S) site ${s} → Boomi executeStInboundFile` : `create SSH site ${s} → profile ${p.ssh_profile || "inbox_lab"} (/usecase/inbox)`, endpoint: "POST /sites" })),
+            { step: 2 + sites.length, action: `create ${route === "both" ? "Advanced Routing" : "Basic"} subscription on /${folder}`, endpoint: "POST /subscriptions" }
+          ];
+          if (route === "both") plan.push({ step: plan.length + 1, action: `create SIMPLE + TEMPLATE + COMPOSITE routes (fan-out to ${sites.join(" + ")})`, endpoint: "POST /routes" });
+          return { ok: true, dry_run: true, route, plan, notes: ["Simulation: nothing is created."], next: "Ask the user to confirm, then call again with dry_run=False." };
+        }
+        onboarded.add(n);
+        return { ok: true, dry_run: false, route, created: [`/accounts/${n}`, ...sites.map(s => `/sites/${s}`), "/subscriptions/sim-sub", ...(route === "both" ? ["/routes/sim-simple", "/routes/sim-template", "/routes/sim-composite"] : [])],
+          secret_file: `secrets/${n}.txt`, delivers_to: sites, notes: ["Simulation result."],
+          partner_connection: { protocol: "SFTP", host: "192.168.0.21", port: 8022, user: n, upload_to: folder } };
+      }
+      default: return null;
+    }
+  }
+  return {
+    async snapshot(name) { await sleep(350); const f = snaps[name]; if (!f) return { status: "NOT_FOUND" }; return f(); },
+    async request(action, p = {}) { await sleep(300); const id = `req-sim-${Date.now()}-${action}`; pending.set(id, { action, p, at: Date.now() }); return id; },
+    async result(id) {
+      await sleep(250); const job = pending.get(id); if (!job) return { status: "NOT_FOUND" };
+      if (Date.now() - job.at < 1800) return { status: "NOT_FOUND" };
+      const res = compute(job);
+      if (!res) return { requestId: id, action: job.action, status: "REJECTED", result: { ok: false, error: `unknown action '${job.action}'` } };
+      return { requestId: id, action: job.action, status: res.ok ? "DONE" : "FAILED", result: res, completedAt: new Date().toISOString() };
+    },
+    async notify(p) {
+      await sleep(900);
+      const ch = p.channel || "email";
+      return { ok: true, status: "DONE", channel: ch, severity: p.severity, subject: p.subject, simulated: true,
+        email: ch !== "whatsapp" ? "SENT" : "not requested", to: p.to || "default ops recipient",
+        whatsapp: ch !== "email" ? "SENT" : "not requested", whatsapp_to: p.whatsapp_to || "default number" };
+    },
+    async worker() { return "running"; }
+  };
+})();
+const api = () => (cfg.mode === "live" ? Live : Sim);
+
+/* queue a bridge request and poll for its result */
+async function runRequest(action, params, onWait) {
+  const id = await api().request(action, params);
+  onWait?.(`Queued <code>${esc(action)}</code> · waiting for the bridge…`);
+  const deadline = Date.now() + 120000;
+  let n = 0;
+  while (Date.now() < deadline) {
+    await sleep(n++ === 0 ? 1200 : cfg.pollMs);
+    const r = await api().result(id);
+    if (r && r.status && r.status !== "NOT_FOUND") return r;
+    onWait?.(`Queued <code>${esc(action)}</code> · waiting for the bridge… ${Math.round((Date.now() - deadline + 120000) / 1000)} s`);
+  }
+  throw new Error(`The bridge did not answer request ${id} within 2 minutes. Check that bridge_worker.py is running (./start-bridge.sh --status) and the VPN is up.`);
+}
+function resultError(r) {
+  if (r.status === "DONE" && r.result?.ok !== false) return null;
+  return `${badge(r.status)} ${esc(r.result?.error || "The bridge reported a failure.")}${r.result?.rolled_back ? `<h5>Rollback</h5><ul>${r.result.rolled_back.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}`;
+}
+
+/* ======================================================================= chat UI */
+const thread = $("#thread"), msgs = $("#msgs");
+const scrollDown = () => requestAnimationFrame(() => msgs.scrollTo({ top: msgs.scrollHeight, behavior: "smooth" }));
+function addUser(text) {
+  const el = document.createElement("div"); el.className = "msg user";
+  el.innerHTML = `<div class="bubble">${esc(text).replace(/\n/g, "<br>")}<div class="meta">${nowTime()}</div></div>`;
+  thread.append(el); scrollDown();
+}
+function addBot(html = "") {
+  const el = document.createElement("div"); el.className = "msg bot";
+  el.innerHTML = `<div class="avatar">AI</div><div class="bubble"><div class="content">${html}</div><div class="meta">OmniMFT Ops Copilot · ${nowTime()}</div></div>`;
+  thread.append(el); scrollDown();
+  const c = $(".content", el);
+  return { el, set(h) { c.innerHTML = h; scrollDown(); }, append(h) { c.insertAdjacentHTML("beforeend", h); scrollDown(); }, node: c };
+}
+function thinking(label = "Working") {
+  const m = addBot(`<span class="typing"><i></i><i></i><i></i><span style="margin-left:6px">${esc(label)}…</span></span>`);
+  return { ...m, wait(h) { m.set(`<span class="typing"><i></i><i></i><i></i><span style="margin-left:6px">${h}</span></span>`); } };
+}
+function chips(list) {
+  return `<div class="chips">${list.map(t => `<button class="chip" data-prompt="${esc(t)}">${esc(t)}</button>`).join("")}</div>`;
+}
+/* Approval card: resolves true (approved) / false (rejected). getValues reads editable fields at approval time. */
+function approvalCard(host, { title, html, approveLabel = "Approve", getValues }) {
+  return new Promise(resolve => {
+    const card = document.createElement("div"); card.className = "approve";
+    card.innerHTML = `<header><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>Approval required · ${esc(title)}</header>
+      <div class="body">${html}</div>
+      <div class="actions"><button class="btn primary" data-a="ok">${esc(approveLabel)}</button><button class="btn danger" data-a="no">Reject</button><span class="decided"></span></div>`;
+    host.node.append(card); scrollDown();
+    card.addEventListener("click", e => {
+      const b = e.target.closest("button[data-a]"); if (!b) return;
+      const ok = b.dataset.a === "ok";
+      const values = ok && getValues ? getValues(card) : null;
+      if (values instanceof Error) { toast(values.message); return; }
+      card.querySelectorAll("button,input,select,textarea").forEach(x => x.disabled = true);
+      card.classList.add("done");
+      $(".decided", card).innerHTML = `${ok ? badge("APPROVED") : badge("REJECTED")} by operator at ${nowTime()}`;
+      resolve(ok ? (values || true) : false);
+    });
+  });
+}
+
+let busy = false;
+async function send(text) {
+  text = text.trim(); if (!text || busy) return;
+  showView("chat");
+  $("#hero")?.remove();
+  addUser(text);
+  busy = true; $("#sendBtn").disabled = true;
+  try { await route(text); }
+  catch (err) { addBot(`<div class="note crit"><b>Something went wrong.</b> ${esc(err.message)}</div>`); }
+  finally { busy = false; $("#sendBtn").disabled = false; $("#input").focus(); }
+}
+
+/* ======================================================================= intent routing */
+/* Last operation outcome, used to draft a notification "about this" like Agentstudio does. Never holds secrets. */
+let lastEvent = null;
+const remember = e => { lastEvent = { ...e, at: Date.now() }; };
+
+/* Partner / ST account name in free text:
+   "partner omnimft_e2e" · any token with "_" (PT_Nusantara_Cargo) · company form "PT Nusantara Cargo" / "CV. Maju Jaya" → PT_Nusantara_Cargo */
+const NAME_STOP = new Set(("and dan to ke for untuk with dengan setup status route routes partner partners account akun please tolong yang which is ada sudah belum " +
+  "lengkap complete incomplete transfer transfers file files gagal failed now sekarang send kirim email e-mail notify notif whatsapp wa the a an via di of " +
+  "dong ya yah deh sih kah apakah gimana bagaimana bisa aman lagi ini itu tadi saja aja nih tuh kok last this today hari minggu week days hours jam " +
+  "yesterday kemarin all semua me saya kami us in on at from dari terakhir").split(" "));
+function partnerName(text) {
+  const p = text.match(/\bpartner\s+([A-Za-z][A-Za-z0-9_.-]{2,63})/i);
+  if (p && !NAME_STOP.has(p[1].toLowerCase()) && !/^(setup|check|ones|baru|new|sftp)$/i.test(p[1])) {
+    if (!/^(PT|CV|UD)\.?$/i.test(p[1])) return p[1];
+  }
+  const u = text.replace(/\S+@\S+/g, " ").match(/\b([A-Za-z][A-Za-z0-9]*_[A-Za-z0-9_.-]*[A-Za-z0-9])\b/);
+  if (u) return u[1];
+  const c = text.match(/\b(PT|CV|UD)\.?\s+([A-Za-z0-9&.-]+(?:\s+[A-Za-z0-9&.-]+){0,5})/i);
+  if (c) {
+    const words = [];
+    for (const w of c[2].split(/\s+/)) { if (NAME_STOP.has(w.toLowerCase().replace(/[^a-z-]/g, ""))) break; words.push(w.replace(/[^A-Za-z0-9.-]/g, "")); }
+    // company names are written in Title Case in ST ("pt nusantara cargo" → PT_Nusantara_Cargo)
+    const name = [c[1].toUpperCase(), ...words.filter(Boolean).map(w => w === w.toLowerCase() ? w.charAt(0).toUpperCase() + w.slice(1) : w)].join("_");
+    if (words.length && /^[A-Za-z][A-Za-z0-9_.-]{2,63}$/.test(name)) return name;
+  }
+  // single-word account in a transfer question: "transfers of RTGS", "file dari akun RTGS"
+  if (/(transfer|file|kiriman|upload)/i.test(text)) {
+    for (const a of text.matchAll(/\b(?:of|for|from|dari|untuk|account|akun|by|oleh)\s+(?:(?:the\s+)?(?:akun|account|partner)\s+)?([A-Za-z][A-Za-z0-9_.-]{2,63})\b/gi))
+      if (!NAME_STOP.has(a[1].toLowerCase())) return a[1];
+  }
+  return "";
+}
+const sevOf = text => /critical|kritis/i.test(text) ? "CRITICAL" : /warning|peringatan/i.test(text) ? "WARNING" : /\binfo\b/i.test(text) ? "INFO" : null;
+/* Run a read flow, then draft a notification from the result it remembered ("check X and e-mail it to …"). */
+async function andNotify(flow, text) {
+  const before = lastEvent;
+  await flow();
+  if (!lastEvent || lastEvent === before) return;
+  const rc = recipients(text);
+  const host = addBot(`<p>Draft notification based on this result (<b>${esc(lastEvent.kind)}</b>). Review it, then approve.</p>`);
+  await notifyDraft(host, { ...lastEvent, severity: sevOf(text) || lastEvent.severity, channel: channelOf(text, rc), ...rc });
+}
+
+/* Every flow follows the same pattern: run it → remember its outcome → "notify/e-mail …" drafts from that outcome.
+   Words like "this / tadi / hasil" refer to the last outcome; "<action> and notify/e-mail …" runs the action first. */
+function route(text) {
+  const t = text.toLowerCase();
+  const wantsNotify = /\b(notif\w*|notify|e-?mail|whatsapp|wa|alert|kabari|inform\w*)\b/.test(t) || /\S+@\S+\.[a-z]{2,}/.test(t);
+  const explicitBody = /(?:message|pesan|isi(?:nya)?|saying|bilang)\s*[:：]?\s*\S/i.test(text);
+  // only words pointing back in time reuse the last outcome; "check partners and e-mail the result" runs a fresh check
+  const aboutLast = /\b(this|ini|itu|tadi|tersebut|above|barusan|sebelumnya)\b/.test(t);
+  const then = flow => wantsNotify ? andNotify(flow, text) : flow();
+  // guardrail: destructive requests are refused before any routing (the bridge has no delete/disable action either)
+  if (/\b(hapus\w*|delete\w*|remove|drop|purge|wipe|truncate|nonaktif\w*|disable\w*|deactivate\w*|matikan|revoke\w*|cabut|unsubscribe|reset password|ganti password|change password|lock account|kunci akun)\b/.test(t)) {
+    return addBot(`<p><strong>🛡️ Guardrail: destructive action blocked.</strong></p>
+      <p>OmniMFT Ops Copilot cannot delete, disable, revoke or reset anything in SecureTransport or Boomi.
+      The bridge only accepts this allow-list: health, track transfers, certificate audit, Boomi inbound history,
+      partner check, resubmit (with approval) and onboarding (dry-run plan + approval).</p>
+      <p>To remove a partner, account, site or certificate, a ST administrator must do it in <em>ST Admin</em> under the change process.
+      I can run a read-only check first so you know exactly what exists.</p>
+      ${chips(["Check partner setup for all OmniMFT partners", "Check certificates and keys that are expired or expire in the next 30 days."])}`);
+  }
+  if (wantsNotify && (explicitBody || (aboutLast && lastEvent))) return flowNotify(text);
+  if (/\bonboard(?!ing\b)|tambah(kan)? partner|partner baru|new (sftp )?partner/.test(t)) return flowOnboard(text, wantsNotify);
+  if (/resubmit|re-?process|kirim ulang|proses ulang/.test(t)) return flowResubmit(wantsNotify);
+  if (wantsNotify && /(cert|sertifikat|\bkeys?\b|kunci|expire|kedaluwarsa)/.test(t)) return flowCertAlert(text);
+  if (/(cert|sertifikat|\bkeys?\b|kunci|expire|kedaluwarsa)/.test(t)) return flowCertificates();
+  const pname = partnerName(text);
+  if (pname && /(transfer|file|fail|gagal|kiriman|upload)/.test(t)) return then(() => flowAccountTransfers(pname, /(fail|gagal|error)/.test(t)));
+  if (/partner/.test(t) || pname) return then(() => flowPartnerCheck(text));
+  if (/(fail|gagal|error|transfer)/.test(t)) return then(flowFailed);
+  if (/(refresh|perbarui|update snapshot)/.test(t)) return flowRefresh();
+  if (/(health|status|sehat|kesehatan|bridge|connect)/.test(t)) return then(flowHealth);
+  if (wantsNotify) return flowNotify(text);
+  addBot(`<p>I route each request to a specific OmniMFT operation. I can help with:</p>
+    <ul><li>Failed transfers and their root cause</li><li>Certificate &amp; key expiry audit</li><li>Partner setup checks</li>
+    <li>Onboarding a new SFTP partner (route boomi, ssh or both)</li><li>Resubmitting a failed transfer</li><li>E-mail / WhatsApp notifications</li><li>Bridge health</li></ul>
+    ${chips(STARTERS.map(s => s.prompt).slice(0, 3))}`);
+}
+
+/* ---- 1. failed transfers */
+async function flowFailed() {
+  const m = thinking("Reading the transfer snapshot");
+  const snap = await api().snapshot("transfers");
+  if (snap?.status === "NOT_FOUND") return m.set(`<div class="note warn">No transfer snapshot yet. Is the bridge running?</div>`);
+  const f = snap.failed_7d || {}; const rows = (f.transfers || []).slice().sort((a, b) => (parseTime(b.start_time) || 0) - (parseTime(a.start_time) || 0));
+  if (!rows.length) {
+    remember({ kind: "failed transfers", severity: "INFO", subject: "No failed transfers in SecureTransport in the last 7 days",
+      message: `No file transfers failed in SecureTransport in the last 7 days (snapshot ${snap.syncedAt || "n/a"}).` });
+    return m.set(`<p>${badge("OK")} No failed transfers in the last 7 days.</p><div class="meta">Snapshot ${ageOf(snap.syncedAt).text}</div>`);
+  }
+  const causes = {};
+  rows.forEach(r => { const k = r.diagnosis || r.error_message || "No diagnosis available"; (causes[k] ||= { n: 0, err: r.error_message, sites: new Set() }).n++; if (r.transfer_site) causes[k].sites.add(r.transfer_site); });
+  m.set(`<p><b>${f.total_matching ?? rows.length} failed transfer(s)</b> in the last 7 days${f.total_matching > rows.length ? ` (showing the latest ${rows.length})` : ""}.</p>
+    <h5>Root causes</h5>
+    <ol class="plan">${Object.entries(causes).sort((a, b) => b[1].n - a[1].n).map(([k, v]) =>
+      `<li><b>${v.n}×</b> ${v.err ? `<code>${esc(v.err)}</code> — ` : ""}${esc(k)}${v.sites.size ? ` <span class="meta">(site: ${[...v.sites].map(esc).join(", ")})</span>` : ""}</li>`).join("")}</ol>
+    <h5>Transfers</h5>
+    ${table([["Time", r => fmtTime(r.start_time)], ["File", r => `<b>${esc(r.filename)}</b><div class="meta">${esc(r.tracking_id)}</div>`],
+      ["Sender → Receiver", r => `${esc(r.sender)}<br>→ ${esc(r.receiver)}`], ["Protocol", r => esc(r.protocol)], ["Status", r => badge(r.status)], ["Error", r => esc(r.error_message || "—")]], rows.slice(0, 15))}
+    <div class="meta">Snapshot ${ageOf(snap.syncedAt).text} · ${esc(snap.window || "")}</div>
+    ${chips(["Find the most recent failed transfer, resubmit it, and notify the ops team.", "Send an e-mail about this result"])}`);
+  const total = f.total_matching ?? rows.length;
+  remember({ kind: "failed transfers", severity: "WARNING", subject: `${total} failed transfer(s) in SecureTransport in the last 7 days`,
+    message: [`${total} file transfer(s) failed in SecureTransport in the last 7 days.`, "Root causes:",
+      ...Object.entries(causes).sort((a, b) => b[1].n - a[1].n).map(([k, v]) => `- ${v.n}x ${v.err ? `"${v.err}": ` : ""}${k}${v.sites.size ? ` (site ${[...v.sites].join(", ")})` : ""}`),
+      `Latest: ${rows[0].filename} at ${rows[0].start_time} (${rows[0].sender} -> ${rows[0].receiver}).`].join("\n") });
+}
+
+/* ---- 2. certificates */
+async function flowCertificates() {
+  const m = thinking("Reading the certificate snapshot");
+  const c = await api().snapshot("certificates");
+  if (c?.status === "NOT_FOUND") return m.set(`<div class="note warn">No certificate snapshot yet. Is the bridge running?</div>`);
+  const ex = c.expired || [], soon = c.expiring || [], s = c.summary || {};
+  const item = x => `<div class="card" style="margin:8px 0;box-shadow:none">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${badge(x.severity)} <b>${esc(x.name)}</b> <span class="meta">${esc(x.type)} · ${esc(x.usage)}${x.account ? ` · account ${esc(x.account)}` : ""}</span></div>
+      <div class="meta" style="margin-top:4px">${esc(x.subject || "")}</div>
+      <p style="margin:6px 0">Expires ${fmtTime(x.expires)} · <b>${x.days_left < 0 ? `${Math.abs(x.days_left)} days ago` : `in ${x.days_left} days`}</b></p>
+      ${x.remediation?.action ? `<p style="margin:4px 0"><b>Fix:</b> ${esc(x.remediation.action)}</p>` : ""}
+      ${(x.remediation?.wsl_commands || []).length ? `<div class="meta">Suggested WSL commands — run only after review and your explicit OK:</div>${x.remediation.wsl_commands.map(cmd => `<pre class="cmd">${esc(cmd)}</pre>`).join("")}` : ""}
+    </div>`;
+  m.set(`<div class="stats"><div class="stat"><b style="color:var(--crit)">${s.expired ?? ex.length}</b><span>Expired · CRITICAL</span></div>
+      <div class="stat"><b style="color:var(--warn)">${s.expiring ?? soon.length}</b><span>Expiring ≤ ${c.window_days ?? 30} days · WARNING</span></div>
+      <div class="stat"><b>${s.no_expiry_date ?? "—"}</b><span>No expiry date</span></div></div>
+    ${ex.length ? `<h5>Expired</h5>${ex.map(item).join("")}` : ""}
+    ${soon.length ? `<h5>Expiring soon</h5>${soon.map(item).join("")}` : ""}
+    ${!ex.length && !soon.length ? `<p>${badge("OK")} Nothing expired or expiring within ${c.window_days ?? 30} days.</p>` : ""}
+    <div class="note">Nothing in SecureTransport is deleted or replaced without your confirmation.</div>
+    <div class="meta">Snapshot ${ageOf(c.syncedAt).text}</div>
+    ${ex.length ? chips(["Send a CRITICAL alert about expired certificates by email and WhatsApp."]) : ""}`);
+  remember({ kind: "certificate audit", severity: ex.length ? "CRITICAL" : soon.length ? "WARNING" : "INFO",
+    subject: ex.length ? `${ex.length} expired certificate(s) in SecureTransport` : soon.length ? `${soon.length} certificate(s) expiring soon` : "Certificate audit: nothing expired or expiring",
+    message: !ex.length && !soon.length ? `No certificate or key in SecureTransport is expired or expires within ${c.window_days ?? 30} days.` : [...ex.map(x => `EXPIRED: ${x.name} (${x.type}, ${x.usage}) expired ${Math.abs(x.days_left)} days ago.`),
+      ...soon.map(x => `EXPIRING: ${x.name} (${x.type}, ${x.usage}) expires in ${x.days_left} days.`),
+      "Action: import the renewed certificates into SecureTransport. Nothing is deleted or replaced without approval."].join("\n") });
+}
+
+/* ---- 3. partner check */
+async function flowPartnerCheck(text) {
+  const name = /\b(all|semua|every|seluruh)\b.*partner|partners\b/i.test(text) ? "" : partnerName(text);
+  const m = thinking(name ? `Checking partner ${name}` : "Checking all OmniMFT partners");
+  const r = await runRequest("check_partner", { partner_name: name }, h => m.wait(h));
+  const err = resultError(r);
+  if (err) {
+    remember({ kind: "partner check", severity: "WARNING", subject: `Partner check ${name ? `for ${name} ` : ""}could not complete`,
+      message: `The read-only partner setup check${name ? ` for ${name}` : ""} returned ${r.status}: ${r.result?.error || "no details"}.` });
+    return m.set(err);
+  }
+  const res = r.result;
+  const list = res.partners || [res];
+  const findings = p => (p.findings || []).length ? `<ul style="margin:4px 0;padding-left:18px">${p.findings.map(f => `<li>${badge(f.severity)} ${esc(f.finding)}<div class="meta">Fix: ${esc(f.fix)}</div></li>`).join("")}</ul>` : `<span class="meta">No findings</span>`;
+  const bad = list.filter(p => p.status !== "COMPLETE");
+  m.set(`${res.partners ? `<p>Checked <b>${res.partners_checked}</b> partner(s): ${Object.entries(res.summary || {}).map(([k, v]) => `${badge(k)} ${v}`).join(" ")}</p>` : ""}
+    ${res.partners && bad.length ? `<p><b>Needs attention:</b> ${bad.map(p => esc(p.partner)).join(", ")}</p>` : ""}
+    ${table([["Partner", p => `<b>${esc(p.partner)}</b>`], ["Route", p => esc(p.route || "—")], ["Status", p => badge(p.status)], ["Findings & fixes", findings]], list)}
+    ${!res.partners && res.status === "NOT_FOUND" ? `<div class="note">There is no SecureTransport account named <code>${esc(res.partner)}</code>. Account names are case-sensitive; to create it, ask “Onboard partner ${esc(res.partner)}”.</div>` : ""}
+    <div class="meta">Read-only check · nothing was changed</div>${chips([...(name ? [`Show transfers of ${name}`] : []), ...(name && res.status === "NOT_FOUND" ? [`Onboard partner ${name}`] : []), "Send an e-mail about this result"])}${rawJson(r)}`);
+  remember({ kind: "partner check", severity: bad.length ? "WARNING" : "INFO",
+    subject: bad.length ? `${bad.length} partner(s) need attention in SecureTransport` : `Partner check: all ${list.length} partner(s) complete`,
+    message: [`Partner setup check (read-only): ${list.length} partner(s) checked.`,
+      ...list.map(p => `- ${p.partner}: ${p.status}${p.route ? ` (route ${p.route})` : ""}${(p.findings || []).map(f => `\n    ${f.severity}: ${f.finding}. Fix: ${f.fix}`).join("")}`)].join("\n") });
+}
+
+/* ---- partner transfers (live ST search by account) */
+async function flowAccountTransfers(account, failedOnly) {
+  const m = thinking(`Searching SecureTransport transfers of ${account}`);
+  const r = await runRequest("track_transfers", { account, status: failedOnly ? "Failed" : "", since_hours: 24 * 7, limit: 20 }, h => m.wait(h));
+  const err = resultError(r);
+  if (err) {
+    remember({ kind: "partner transfers", severity: "WARNING", subject: `Transfer search for ${account} could not complete`, message: `Transfer search for account ${account} returned ${r.status}: ${r.result?.error || "no details"}.` });
+    return m.set(err);
+  }
+  const rows = r.result.transfers || [], label = failedOnly ? "failed transfer(s)" : "transfer(s)";
+  const failed = rows.filter(x => /fail|abort/i.test(x.status || ""));
+  m.set(`<p><b>${r.result.total_matching ?? rows.length} ${label}</b> for account <b>${esc(account)}</b> in the last 7 days${rows.length < (r.result.total_matching || 0) ? ` (showing ${rows.length})` : ""}.</p>
+    ${rows.length ? table([["Time", x => fmtTime(x.start_time)], ["File", x => `<b>${esc(x.filename)}</b><div class="meta">${esc(x.tracking_id)}</div>`],
+      ["Sender → Receiver", x => `${esc(x.sender)}<br>→ ${esc(x.receiver)}`], ["Status", x => badge(x.status)], ["Error / diagnosis", x => esc(x.error_message || "—") + (x.diagnosis ? `<div class="meta">${esc(x.diagnosis)}</div>` : "")]], rows)
+      : `<p class="meta">No ${label} found. A new partner has no traffic until it uploads its first file.</p>`}
+    ${chips([`Check partner ${account}`, "Send an e-mail about this result"])}`);
+  remember({ kind: "partner transfers", severity: failed.length ? "WARNING" : "INFO", subject: `${account}: ${rows.length} ${label} in the last 7 days${failed.length && !failedOnly ? `, ${failed.length} failed` : ""}`,
+    message: [`SecureTransport ${label} for account ${account} in the last 7 days: ${r.result.total_matching ?? rows.length}.`,
+      ...rows.slice(0, 10).map(x => `- ${x.start_time} ${x.filename}: ${x.status}${x.error_message ? ` (${x.error_message})` : ""}`)].join("\n") });
+}
+
+/* ---- 4. onboarding (dry run → approval → execute) */
+async function flowOnboard(text, withNotify = false) {
+  const nm = [null, partnerName(text) || (text.match(/onboard\s+(?:a\s+)?(?:new\s+)?(?:sftp\s+)?(?:partner\s+)?([A-Za-z][A-Za-z0-9_.-]{2,63})/i) || [])[1] || ""];
+  const t = text.toLowerCase();
+  const routeGuess = /(both|keduanya|boomi\s+(and|dan)\s+(the\s+)?(sftp|ssh))|((sftp|ssh)\s+(and|dan)\s+boomi)/.test(t) ? "both" : /(sftp inbox|ssh)/.test(t) && !/boomi/.test(t) ? "ssh" : "boomi";
+  const folder = (t.match(/folder\s+([a-z0-9_./-]+)/) || [])[1] || "inbound";
+  const host = addBot(`<p>I will first ask the bridge for a <b>dry-run plan</b>; nothing is created until you approve it.</p>`);
+  const params = await approvalCard(host, {
+    title: "Partner onboarding parameters", approveLabel: "Build dry-run plan",
+    html: `<div class="fgrid">
+      <label>Partner name</label><input name="partner_name" value="${esc(nm?.[1] || "")}" placeholder="PT_Example_Partner">
+      <label>Route</label><select name="route">${["boomi", "ssh", "both"].map(r => `<option ${r === routeGuess ? "selected" : ""} value="${r}">${r}${r === "both" ? " (Boomi + SFTP inbox fan-out)" : r === "ssh" ? " (SFTP inbox)" : " (Boomi listener)"}</option>`).join("")}</select>
+      <label>Inbound folder</label><input name="inbound_folder" value="${esc(folder)}">
+      <label>SSH profile</label><input name="ssh_profile" value="inbox_lab"></div>`,
+    getValues: card => {
+      const v = Object.fromEntries([...card.querySelectorAll("[name]")].map(i => [i.name, i.value.trim()]));
+      return /^[A-Za-z][A-Za-z0-9_.-]{2,63}$/.test(v.partner_name) ? v : new Error("Partner name: start with a letter, 3–64 chars of letters, digits, _ . -");
+    }
+  });
+  if (!params) return host.append(`<p class="meta">Onboarding cancelled.</p>`);
+  const m = thinking("Building dry-run plan");
+  const r = await runRequest("onboard_partner", { ...params, dry_run: "true" }, h => m.wait(h));
+  const err = resultError(r);
+  if (err) {
+    remember({ kind: "partner onboarding plan", severity: "WARNING", subject: `Onboarding plan for ${params.partner_name} was rejected`,
+      message: `The dry-run onboarding plan for partner ${params.partner_name} (route ${params.route}) failed: ${r.result?.error || r.status}. Nothing was created in SecureTransport.` });
+    m.set(err + chips(["Send an e-mail about this result"]));
+    if (withNotify) await notifyDraft(m, { ...lastEvent, channel: channelOf(text, recipients(text)), ...recipients(text) });
+    return;
+  }
+  const plan = r.result;
+  m.set(`<p><b>Dry-run plan</b> for <b>${esc(params.partner_name)}</b> · route ${badge(plan.route)}</p>
+    <ol class="plan">${(plan.plan || []).map(s => `<li>${esc(s.action)} <span class="meta"><code>${esc(s.endpoint || "")}</code></span></li>`).join("")}</ol>
+    ${(plan.notes || []).map(n => `<div class="note">${esc(n)}</div>`).join("")}`);
+  const ok = await approvalCard(m, {
+    title: `Create ${params.partner_name} in SecureTransport`, approveLabel: "Approve & execute",
+    html: `<p>This writes to the shared SecureTransport system with a privileged account: account, transfer site(s), subscription${params.route === "both" ? " and Advanced Routing routes" : ""}.
+      On failure the bridge rolls back what it created. The generated password stays on the bridge host (secrets/).</p>`
+  });
+  if (!ok) return m.append(`<p class="meta">Execution rejected. Nothing was created.</p>`);
+  const x = thinking(`Onboarding ${params.partner_name}`);
+  const r2 = await runRequest("onboard_partner", { ...params, dry_run: "false" }, h => x.wait(h));
+  const err2 = resultError(r2);
+  if (err2) {
+    x.set(err2 + chips(["Send an e-mail about this result"]));
+    remember({ kind: "partner onboarding", severity: "CRITICAL", subject: `Onboarding of ${params.partner_name} FAILED`,
+      message: [`Onboarding of partner ${params.partner_name} (route ${params.route}) failed in SecureTransport: ${r2.result?.error || r2.status}.`,
+        ...(r2.result?.rolled_back?.length ? ["Rollback:", ...r2.result.rolled_back.map(s => `- ${s}`)] : [])].join("\n") });
+    if (withNotify) await notifyDraft(x, { ...lastEvent, channel: channelOf(text, recipients(text)), ...recipients(text) });
+    return;
+  }
+  const d = r2.result, pc = d.partner_connection || {};
+  x.set(`<p>${badge("DONE")} Partner <b>${esc(params.partner_name)}</b> is onboarded and delivers to ${(d.delivers_to || []).map(s => `<code>${esc(s)}</code>`).join(" + ")}.</p>
+    <h5>Partner connection details</h5>
+    ${table([["Protocol", () => esc(pc.protocol)], ["Host", () => esc(pc.host)], ["Port", () => esc(pc.port)], ["User", () => esc(pc.user)], ["Upload to", () => esc(pc.upload_to)]], [{}])}
+    ${d.secret_file ? `<div class="note">The partner password is stored on the bridge host at <code>${esc(d.secret_file)}</code> (never shown here). Share it with the partner through a secure channel.</div>` : ""}
+    <details><summary>Created objects (${(d.created || []).length})</summary><ul>${(d.created || []).map(c => `<li><code>${esc(c)}</code></li>`).join("")}</ul></details>
+    ${chips([`Check partner ${params.partner_name}`, "Send an e-mail about this onboarding"])}`);
+  // The password is never part of the message: it stays on the bridge host.
+  remember({ kind: "partner onboarding", severity: "INFO", subject: `New SFTP partner onboarded: ${params.partner_name}`,
+    message: [`Partner ${params.partner_name} has been onboarded in SecureTransport (route ${d.route || params.route}).`,
+      `Files uploaded by the partner are delivered to: ${(d.delivers_to || []).join(" + ") || "-"}.`,
+      `SFTP connection: ${pc.protocol || "SFTP"} ${pc.host || ""}${pc.port ? `:${pc.port}` : ""}, user ${pc.user || params.partner_name}, upload folder /${pc.upload_to || params.inbound_folder}.`,
+      `Objects created: ${(d.created || []).length}.`,
+      "The partner password is stored on the OmniMFT bridge host and must be shared through a secure channel (not by e-mail)."].join("\n") });
+  if (withNotify) await notifyDraft(x, { ...lastEvent, channel: channelOf(text, recipients(text)), ...recipients(text) });
+}
+
+/* ---- 5. resubmit latest failed (+ optional notify) */
+async function flowResubmit(withNotify) {
+  const m = thinking("Finding the most recent failed transfer");
+  const snap = await api().snapshot("transfers");
+  const rows = (snap?.failed_7d?.transfers || []).filter(r => r.ref).sort((a, b) => (parseTime(b.start_time) || 0) - (parseTime(a.start_time) || 0));
+  if (!rows.length) return m.set(`<p>${badge("OK")} No failed transfers in the last 7 days, nothing to resubmit.</p>`);
+  const t = rows[0];
+  m.set(`<p>The most recent failed transfer:</p>
+    ${table([["Time", () => fmtTime(t.start_time)], ["File", () => `<b>${esc(t.filename)}</b>`], ["Sender → Receiver", () => `${esc(t.sender)} → ${esc(t.receiver)}`], ["Protocol", () => esc(t.protocol)], ["Status", () => badge(t.status)]], [{}])}
+    <p><b>ST error:</b> <code>${esc(t.error_message || "—")}</code></p>
+    ${t.diagnosis ? `<div class="note warn"><b>Diagnosis:</b> ${esc(t.diagnosis)}</div>` : ""}`);
+  const ok = await approvalCard(m, {
+    title: "Resubmit transfer", approveLabel: "Approve resubmit",
+    html: `<p>SecureTransport will deliver <b>${esc(t.filename)}</b> again (tracking ID <code>${esc(t.tracking_id)}</code>).
+      Approve only if the cause above has been fixed; otherwise the resubmit will fail the same way.</p>`
+  });
+  if (!ok) return m.append(`<p class="meta">Resubmit rejected. Nothing was sent.</p>`);
+  const x = thinking("Resubmitting");
+  const r = await runRequest("resubmit_transfer", { ref: t.ref }, h => x.wait(h));
+  const err = resultError(r);
+  let outcome;
+  if (err) { x.set(err); outcome = `Resubmit of ${t.filename} FAILED: ${r.result?.error || r.status}`; }
+  else {
+    const d = r.result;
+    x.set(`<p>${badge("DONE")} Resubmitted <b>${esc(d.filename || t.filename)}</b>${d.account ? ` (account ${esc(d.account)})` : ""} via ${esc(d.resubmitted || "this transfer")}. Previous status: ${badge(d.previous_status || "Failed")}.</p>
+      <div class="meta">Snapshots refresh automatically after a change; ask for failed transfers again in a minute to confirm.</div>${rawJson(r)}`);
+    outcome = `Transfer ${d.filename || t.filename} (tracking ${t.tracking_id}) was resubmitted after failing with: ${t.error_message || "n/a"}`;
+  }
+  remember({ kind: "transfer resubmit", severity: err ? "CRITICAL" : "WARNING", subject: `Transfer ${err ? "resubmit FAILED" : "resubmitted"}: ${t.filename}`,
+    message: [outcome, `Original transfer: ${t.sender} -> ${t.receiver} (${t.protocol}), ${t.start_time}.`, t.diagnosis ? `Diagnosis: ${t.diagnosis}` : ""].filter(Boolean).join("\n") });
+  if (withNotify) await notifyDraft(x, { ...lastEvent, channel: "email" });
+  else x.append(chips(["Notify the ops team about this resubmit"]));
+}
+
+/* ---- 6. certificate alert */
+async function flowCertAlert(text) {
+  const m = thinking("Collecting certificate findings");
+  const c = await api().snapshot("certificates");
+  const ex = c?.expired || [], soon = c?.expiring || [];
+  if (!ex.length && !soon.length) return m.set(`<p>${badge("OK")} No expired or expiring certificates, so there is nothing to alert about.</p>`);
+  const rc = recipients(text), channel = channelOf(text, rc);
+  const sev = ex.length ? "CRITICAL" : "WARNING";
+  const message = [
+    ex.length ? `${ex.length} EXPIRED in SecureTransport: ${ex.map(x => `${x.name} (${x.type}, expired ${Math.abs(x.days_left)} days ago)`).join("; ")}` : "",
+    soon.length ? `${soon.length} expiring within ${c.window_days ?? 30} days: ${soon.map(x => `${x.name} (in ${x.days_left} days)`).join("; ")}` : "",
+    "Action: import the renewed certificates into ST; OmniMFT Ops Copilot will not delete or replace anything without approval."
+  ].filter(Boolean).join(" | ");
+  m.set(`<p>Found ${badge("CRITICAL")} ${ex.length} expired and ${badge("WARNING")} ${soon.length} expiring item(s). Here is the draft alert:</p>`);
+  await notifyDraft(m, { subject: ex.length ? `${ex.length} expired certificate(s) in SecureTransport` : `${soon.length} certificate(s) expiring soon`, severity: sev, message, channel, ...rc });
+}
+
+/* ---- generic notification */
+const EMAIL_RE = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
+function recipients(text) {
+  const emails = [...new Set(text.match(EMAIL_RE) || [])];
+  const phones = [...new Set((text.replace(EMAIL_RE, " ").match(/\+?\d[\d\s-]{8,}\d/g) || []).map(p => p.replace(/\D/g, "")).filter(p => p.length >= 10 && p.length <= 15))];
+  return { to: emails.join(";"), whatsapp_to: phones.join(";") };
+}
+function channelOf(text, rc = {}) {
+  const t = text.toLowerCase(), wa = /whatsapp|\bwa\b/.test(t) || !!rc.whatsapp_to, em = /e-?mail|surel/.test(t) || !!rc.to;
+  return wa && em ? "both" : wa ? "whatsapp" : "email";
+}
+async function flowNotify(text) {
+  const rc = recipients(text);
+  // explicit message = whatever follows "message/pesan/isi/saying:" in the prompt
+  const body = (text.match(/(?:message|pesan|isi(?:nya)?|saying|bilang)\s*[:：]?\s*(.+)$/i) || [])[1]?.replace(EMAIL_RE, "").trim() || "";
+  const subject = (text.match(/(?:subject|judul)\s*[:：]\s*([^\n|]+?)(?=\s+(?:message|pesan|isi)\b|$)/i) || [])[1]?.trim();
+  const ev = body ? null : lastEvent; // no explicit message → draft from the last operation, like Agentstudio
+  const sevKw = sevOf(text);
+  const to = `${rc.to ? ` to <b>${esc(rc.to)}</b>` : ""}${rc.whatsapp_to ? ` / WhatsApp <b>${esc(rc.whatsapp_to)}</b>` : ""}`;
+  const host = addBot(ev
+    ? `<p>Draft notification${to} based on the last result: <b>${esc(ev.kind)}</b> (${esc(ageOf(new Date(ev.at).toISOString()).text)}). Review it, then approve.</p>`
+    : `<p>Draft notification${to}. ${body ? "Review it, then approve." : "There is no earlier result in this session to report on, so type the message in the card, then approve."}</p>`);
+  await notifyDraft(host, { subject: subject || ev?.subject || "OmniMFT operations notice", severity: sevKw || ev?.severity || "INFO",
+    message: body || ev?.message || "", channel: channelOf(text, rc), ...rc });
+}
+async function notifyDraft(host, d) {
+  const vals = await approvalCard(host, {
+    title: "Send notification", approveLabel: "Approve & send",
+    html: `<div class="fgrid">
+      <label>Severity</label><select name="severity">${["INFO", "WARNING", "CRITICAL"].map(s => `<option ${s === d.severity ? "selected" : ""}>${s}</option>`).join("")}</select>
+      <label>Channel</label><select name="channel">${["email", "whatsapp", "both"].map(s => `<option ${s === d.channel ? "selected" : ""}>${s}</option>`).join("")}</select>
+      <label>Subject</label><input name="subject" value="${esc(d.subject)}">
+      <label>E-mail to</label><input name="to" value="${esc(d.to || cfg.emailTo)}" placeholder="default ops recipient">
+      <label>WhatsApp to</label><input name="whatsapp_to" value="${esc(d.whatsapp_to || cfg.waTo)}" placeholder="default number">
+      <label>Message</label><textarea name="message" rows="4">${esc(d.message)}</textarea></div>
+      <div class="meta" style="margin-top:6px">Subject is prefixed [OmniMFT][SEVERITY] by Boomi. WhatsApp delivery needs an APPROVED Meta template; line breaks are removed for WhatsApp.</div>`,
+    getValues: card => {
+      const v = Object.fromEntries([...card.querySelectorAll("[name]")].map(i => [i.name, i.value.trim()]));
+      if (!v.subject || !v.message) return new Error("Subject and message are required");
+      if (v.channel !== "email") v.message = v.message.replace(/\s*\n+\s*/g, " | ");
+      return v;
+    }
+  });
+  if (!vals) return host.append(`<p class="meta">Notification rejected. Nothing was sent.</p>`);
+  const m = thinking("Sending through Boomi");
+  const r = await api().notify(vals);
+  // Boomi ack: {ok, status: DONE|REJECTED, email: "SENT"|..., to, whatsapp: "SENT"|"not requested"|<error>, whatsapp_to}
+  const st = String(r?.status || "UNKNOWN").toUpperCase();
+  const accepted = r?.ok !== false && /^(DONE|SENT)$/.test(st);
+  const chan = v => (v && typeof v === "object" ? v.status : v) || "—";
+  const parts = [];
+  if (vals.channel !== "whatsapp") parts.push(`E-mail ${badge(chan(r?.email))} to <b>${esc(r?.to || vals.to || "the default ops recipient")}</b>`);
+  if (vals.channel !== "email") parts.push(`WhatsApp ${badge(chan(r?.whatsapp))} to <b>${esc(r?.whatsapp_to || vals.whatsapp_to || "the default number")}</b>`);
+  const allSent = parts.length && [vals.channel !== "whatsapp" ? chan(r?.email) : "SENT", vals.channel !== "email" ? chan(r?.whatsapp) : "SENT"].every(s => /^SENT$/i.test(s));
+  m.set(`<p>${badge(accepted && allSent ? "SENT" : accepted ? "PARTIAL" : st)} ${accepted && allSent ? "Notification sent through Boomi."
+      : accepted ? "Boomi accepted the notification, but not every channel reports SENT (see below)."
+      : esc(r?.reason || r?.message || r?.error || "Boomi rejected the notification.")}</p>
+    <ul>${parts.map(p => `<li>${p}</li>`).join("")}</ul>
+    ${accepted && vals.channel !== "whatsapp" ? `<div class="meta">Sender is boomitrain@gmail.com via Amazon SES; if it is not in the inbox, check Spam.</div>` : ""}${rawJson(r)}`);
+}
+
+/* ---- health / refresh */
+async function flowHealth() {
+  const m = thinking("Reading bridge health");
+  const h = await api().snapshot("health"); const w = await api().worker();
+  m.set(healthHtml(h, w) + chips(["Refresh snapshots now"]));
+  if (h && h.status !== "NOT_FOUND") {
+    const a = ageOf(h.syncedAt), wk = w || (a.sec < 300 ? "running" : "stopped"), healthy = h.secure_transport?.ok && h.boomi?.configured && wk === "running";
+    remember({ kind: "bridge health", severity: healthy ? "INFO" : "CRITICAL", subject: `OmniMFT bridge health: ${healthy ? "all systems OK" : "attention needed"}`,
+      message: [`SecureTransport: ${h.secure_transport?.ok ? `OK (${h.secure_transport.version || ""})` : `UNREACHABLE ${h.secure_transport?.error || ""}`}.`,
+        `Bridge worker: ${wk}. Last snapshot ${a.text} (${h.syncedAt}).`,
+        `Boomi API: ${h.boomi?.configured ? "configured" : `missing ${(h.boomi?.missing || []).join(", ")}`}.`].join("\n") });
+  }
+}
+async function flowRefresh() {
+  const m = thinking("Asking the bridge to republish snapshots");
+  const r = await runRequest("refresh_snapshots", {}, h => m.wait(h));
+  m.set(resultError(r) || `<p>${badge("DONE")} Snapshots refreshed.</p>`); refreshHealth();
+}
+function healthHtml(h, worker) {
+  if (!h || h.status === "NOT_FOUND") return `<div class="note warn">No health snapshot found. Start the bridge with <code>./start-bridge.sh</code>.</div>`;
+  const a = ageOf(h.syncedAt), stOk = h.secure_transport?.ok;
+  const wk = worker || (a.sec < 300 ? "running" : "stopped");
+  return `<div class="cards">
+    <div class="card"><h3>SecureTransport</h3><div class="big">${badge(stOk ? "OK" : "ERROR")}</div><div class="meta">${esc(h.secure_transport?.version || h.secure_transport?.error || "")}</div></div>
+    <div class="card"><h3>Last snapshot</h3><div class="big">${esc(a.text)}</div><div class="meta">${a.sec > 300 ? "Older than 5 min: the bridge looks offline" : `every ${esc(h.snapshotSeconds)} s`}</div></div>
+    <div class="card"><h3>Bridge worker</h3><div class="big">${badge(wk.toUpperCase())}</div><div class="meta">${esc(h.worker || "")}${worker ? "" : " · inferred from snapshot age"}</div></div>
+    <div class="card"><h3>Boomi API</h3><div class="big">${badge(h.boomi?.configured ? "OK" : "ERROR")}</div><div class="meta">${h.boomi?.missing?.length ? `Missing .env: ${h.boomi.missing.map(esc).join(", ")}` : "configured"}</div></div></div>`;
+}
+
+/* ======================================================================= health widget + pages */
+const setH = (id, cls, text) => { $(id).innerHTML = `<i class="dot ${cls}"></i>${esc(text)}`; };
+async function refreshHealth() {
+  try {
+    const h = await api().snapshot("health");
+    if (!h || h.status === "NOT_FOUND") throw new Error("no snapshot");
+    const a = ageOf(h.syncedAt), w = await api().worker();
+    setH("#hST", h.secure_transport?.ok ? "ok" : "crit", h.secure_transport?.ok ? "Connected" : "Unreachable");
+    $("#hAge").textContent = a.text;
+    const wk = w || (a.sec < 300 ? "running" : "stopped");
+    setH("#hWorker", wk === "running" ? "ok" : "crit", wk === "running" ? "Running" : "Stopped");
+    setH("#hBoomi", h.boomi?.configured ? "ok" : "warn", h.boomi?.configured ? "Configured" : "Incomplete");
+    $("#hAge").style.color = a.sec > 300 ? "#FF6B78" : "";
+  } catch (e) {
+    setH("#hST", "", "Unknown"); $("#hAge").textContent = "—"; setH("#hWorker", "", "Unknown"); setH("#hBoomi", "crit", "Unreachable");
+  }
+}
+async function renderHealthPage() {
+  const p = $("#healthPage"); p.innerHTML = `<span class="typing"><i></i><i></i><i></i></span>`;
+  try {
+    const [h, w, bi] = await Promise.all([api().snapshot("health"), api().worker(), api().snapshot("boomi_inbound")]);
+    const ex = bi?.executions || [];
+    const cols = ex[0] ? Object.keys(ex[0]).slice(0, 5) : [];
+    p.innerHTML = `${healthHtml(h, w)}
+      <div class="card" style="margin-top:12px"><h3>Boomi inbound listener · last 24 h</h3>
+      ${ex.length ? table(cols.map(k => [k, r => /status/i.test(k) ? badge(r[k]) : /time|date/i.test(k) ? fmtTime(r[k]) : esc(r[k])]), ex.slice(0, 15)) : `<p class="meta">No executions in the snapshot.</p>`}</div>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="hpReload">Reload</button><button class="btn primary" data-prompt="Refresh snapshots now">Refresh snapshots now</button></div>`;
+    $("#hpReload").onclick = renderHealthPage;
+  } catch (e) { p.innerHTML = `<div class="note crit">${esc(e.message)}</div>`; }
+}
+const STARTERS = [
+  { prompt: "Which file transfers failed in the last 7 days, and why?", tag: "Transfer tracking" },
+  { prompt: "Check certificates and keys that are expired or expire in the next 30 days.", tag: "Certificate guard" },
+  { prompt: "Check all partners and tell me which ones are incomplete.", tag: "Partner check · read-only" },
+  { prompt: "Onboard a new SFTP partner PT_Nusantara_Cargo and route its files to both Boomi and the SFTP inbox.", tag: "Onboarding · approval" },
+  { prompt: "Find the most recent failed transfer, resubmit it, and notify the ops team.", tag: "Resubmit + notify · approval" },
+  { prompt: "Send a CRITICAL alert about expired certificates by email and WhatsApp.", tag: "Notification · approval" }
+];
+const starterHtml = () => STARTERS.map((s, i) => `<button class="starter" data-prompt="${esc(s.prompt)}"><span class="n">${i + 1}</span><span>${esc(s.prompt)}<small>${esc(s.tag)}</small></span></button>`).join("");
+function renderHero() {
+  thread.innerHTML = `<div class="hero" id="hero"><div class="logo" style="margin:0 auto;width:46px;height:46px;border-radius:12px"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h11l-3-3M20 17H9l3 3"/></svg></div>
+    <h2>How can I help the MFT team today?</h2><p>Axway SecureTransport × Boomi operations · ${cfg.mode === "live" ? "live bridge data" : "simulation data"}</p>
+    <div class="starters" style="margin-top:18px">${starterHtml()}</div></div>`;
+}
+
+/* ======================================================================= navigation, settings, theme */
+const VIEWS = { chat: ["Chat Copilot", "Track transfers, audit certificates, onboard partners and resubmit through Boomi"],
+  health: ["Bridge Health & Status", "Outbound-only bridge: snapshots every 60 s, queued requests every 5 s"],
+  starters: ["Starter Prompts", "Six guided scenarios from the OmniMFT runbook"], settings: ["Boomi Endpoint Config", "Choose simulation or the live Boomi bridge"] };
+function showView(v) {
+  document.querySelectorAll(".view").forEach(s => s.hidden = s.id !== `view-${v}`);
+  document.querySelectorAll(".nav button").forEach(b => b.dataset.view === v ? b.setAttribute("aria-current", "page") : b.removeAttribute("aria-current"));
+  [$("#title").textContent, $("#subtitle").textContent] = VIEWS[v];
+  closeSide();
+  if (v === "health") renderHealthPage();
+  if (v === "settings") fillSettings();
+}
+function applyMode() {
+  const live = cfg.mode === "live";
+  $("#modeBadge").className = `mode ${live ? "live" : "sim"}`; $("#modeBadge").textContent = live ? "LIVE" : "SIMULATION";
+  $("#footMode").textContent = live ? "Live · Boomi bridge" : "Simulation";
+  document.querySelectorAll("#modeSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mode === cfg.mode)));
+}
+let draftMode = cfg.mode;
+function fillSettings() {
+  draftMode = cfg.mode; $("#cfgBase").value = cfg.base; $("#cfgEmail").value = cfg.emailTo; $("#cfgWa").value = cfg.waTo; $("#cfgPoll").value = String(cfg.pollMs);
+  document.querySelectorAll("#modeSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mode === draftMode)));
+  $("#testOut").innerHTML = "";
+}
+$("#modeSeg").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; draftMode = b.dataset.mode;
+  document.querySelectorAll("#modeSeg button").forEach(x => x.setAttribute("aria-pressed", String(x === b))); });
+function readSettings() { return { mode: draftMode, base: $("#cfgBase").value.trim() || "/api", emailTo: $("#cfgEmail").value.trim(), waTo: $("#cfgWa").value.trim(), pollMs: Number($("#cfgPoll").value) }; }
+$("#settingsForm").addEventListener("submit", e => {
+  e.preventDefault(); cfg = { ...cfg, ...readSettings() }; store.set("omnimft.cfg", cfg); applyMode(); refreshHealth();
+  if ($("#hero")) renderHero();
+  toast("Settings saved"); $("#testOut").innerHTML = isDirectBoomi() ? `<div class="note warn">A direct Boomi URL is blocked by the browser (CORS). Use <code>/api</code> with portal_server.py.</div>` : "";
+});
+$("#testBtn").addEventListener("click", async () => {
+  const prev = cfg; cfg = { ...cfg, ...readSettings() };
+  $("#testOut").innerHTML = `<span class="typing"><i></i><i></i><i></i><span style="margin-left:6px">Testing…</span></span>`;
+  try { const h = await api().snapshot("health"); $("#testOut").innerHTML = healthHtml(h, await api().worker()); }
+  catch (err) { $("#testOut").innerHTML = `<div class="note crit">${esc(err.message)}</div>`; }
+  finally { cfg = prev; }
+});
+function setTheme(t) {
+  if (t) document.documentElement.setAttribute("data-theme", t); else document.documentElement.removeAttribute("data-theme");
+  const dark = t ? t === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  $("#themeLbl").textContent = dark ? "Dark" : "Light";
+}
+$("#themeBtn").addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  const next = cur === "dark" ? "light" : "dark"; setTheme(next); store.set("omnimft.theme", next);
+});
+const closeSide = () => { $("#side").classList.remove("open"); $("#scrim").classList.remove("open"); };
+$("#burger").addEventListener("click", () => { $("#side").classList.add("open"); $("#scrim").classList.add("open"); });
+$("#scrim").addEventListener("click", closeSide);
+document.querySelectorAll(".nav button").forEach(b => b.addEventListener("click", () => showView(b.dataset.view)));
+document.addEventListener("click", e => { const p = e.target.closest("[data-prompt]"); if (p && !p.disabled) send(p.dataset.prompt); });
+const input = $("#input");
+input.addEventListener("input", () => { input.style.height = "auto"; input.style.height = Math.min(input.scrollHeight, 160) + "px"; });
+input.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); $("#form").requestSubmit(); } });
+$("#form").addEventListener("submit", e => { e.preventDefault(); const v = input.value; input.value = ""; input.style.height = "auto"; send(v); });
+
+/* boot */
+setTheme(store.get("omnimft.theme", null));
+applyMode(); renderHero(); $("#startersPage").innerHTML = starterHtml();
+refreshHealth(); setInterval(refreshHealth, 30000);
+</script>
+</body>
+</html>

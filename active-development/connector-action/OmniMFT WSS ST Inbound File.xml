@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bns:Component xmlns:bns="http://api.platform.boomi.com/"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               componentId="86cbad9c-3faf-4242-bc65-277206a20359" name="OmniMFT WSS ST Inbound File" type="connector-action" subType="wss" folderId="Rjo4OTYzOTM1">
+  <bns:encryptedValues/>
+  <bns:description>Receives a raw file pushed by Axway SecureTransport (HTTPS POST, any content type). Endpoint: POST /ws/simple/executeStInboundFile?filename=&amp;account=&amp;trackingId= | built with boomi-companion v1.0.103</bns:description>
+  <bns:object>
+    <Operation>
+      <Archiving directory="" enabled="false"/>
+      <Configuration>
+        <WebServicesServerListenAction inputType="singledata" objectName="stInboundFile" operationType="EXECUTE" outputType="singledata" responseContentType="application/json"/>
+      </Configuration>
+      <Tracking>
+        <TrackedFields/>
+      </Tracking>
+      <Caching/>
+    </Operation>
+  </bns:object>
+</bns:Component>

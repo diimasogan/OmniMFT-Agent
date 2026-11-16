@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bns:Component xmlns:bns="http://api.platform.boomi.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               componentId="6e07d78d-4d5d-4665-9b2f-14959cf35544" name="OmniMFT Bridge API - Upsert Doc" type="process" folderId="Rjo4OTYzOTM1">
+  <bns:encryptedValues/>
+  <bns:description>Outbound-only bridge: the on-prem OmniMFT worker writes a snapshot or a request result. POST /ws/simple/upsertOmnimftDoc?kind=snapshots|results&amp;name=&lt;name&gt; with a JSON body. | built with boomi-companion v1.0.103</bns:description>
+  <bns:object>
+    <process allowSimultaneous="true" enableUserLog="false" processLogOnErrorOnly="false" purgeDataImmediately="false" stopProcessingIfZeroDocuments="true" updateRunDates="false" workload="general">
+      <shapes>
+<shape image="start" name="shape1" shapetype="start" userlabel="" x="48.0" y="48.0">
+  <configuration>
+<connectoraction actionType="Listen" allowDynamicCredentials="NONE" connectorType="wss" hideSettings="true" operationId="681eca57-0079-4b10-bc28-413232f05a36"><parameters/><dynamicProperties/></connectoraction>
+  </configuration>
+  <dragpoints><dragpoint name="shape1.dragpoint1" toShape="shape2" x="224" y="56"/></dragpoints>
+</shape>
+<shape image="documentproperties_icon" name="shape2" shapetype="documentproperties" userlabel="Build Document Key" x="240.0" y="48.0">
+  <configuration>
+<documentproperties>
+<documentproperty defaultValue="" isDynamicCredential="false" isTradingPartner="false" name="Dynamic Process Property - DPP_KEY" persist="false" propertyId="process.DPP_KEY" shouldEncrypt="false">
+  <sourcevalues>
+<parametervalue key="0" usesEncryption="false" valueType="process"><processparameter processproperty="query_kind" processpropertydefaultvalue=""/></parametervalue>
+<parametervalue key="1" usesEncryption="false" valueType="static"><staticparameter staticproperty="/"/></parametervalue>
+<parametervalue key="2" usesEncryption="false" valueType="process"><processparameter processproperty="query_name" processpropertydefaultvalue=""/></parametervalue>
+<parametervalue key="3" usesEncryption="false" valueType="static"><staticparameter staticproperty=".json"/></parametervalue>
+  </sourcevalues>
+</documentproperty>
+</documentproperties>
+  </configuration>
+  <dragpoints><dragpoint name="shape2.dragpoint1" toShape="shape3" x="416" y="56"/></dragpoints>
+</shape>
+<shape image="decision_icon" name="shape3" shapetype="decision" userlabel="Key Allowed?" x="432.0" y="48.0">
+  <configuration>
+<decision comparison="regex" name="Key Allowed?">
+  <decisionvalue valueType="process"><processparameter processproperty="DPP_KEY" processpropertydefaultvalue=""/></decisionvalue>
+  <decisionvalue valueType="static"><staticparameter staticproperty="^(snapshots|results)/[A-Za-z0-9_.-]{1,120}\.json$"/></decisionvalue>
+</decision>
+  </configuration>
+  <dragpoints>
+    <dragpoint identifier="true" name="shape3.dragpoint1" text="True" toShape="shape4" x="608" y="56"/>
+    <dragpoint identifier="false" name="shape3.dragpoint2" text="False" toShape="shape8" x="608" y="216"/>
+  </dragpoints>
+</shape>
+<shape image="documentproperties_icon" name="shape4" shapetype="documentproperties" userlabel="Set File Name" x="624.0" y="48.0">
+  <configuration>
+<documentproperties>
+<documentproperty defaultValue="" isDynamicCredential="false" isTradingPartner="false" name="Disk v2 - File Name" persist="false" propertyId="connector.disk-sdk.fileName" shouldEncrypt="false">
+  <sourcevalues>
+<parametervalue key="0" usesEncryption="false" valueType="process"><processparameter processproperty="DPP_KEY" processpropertydefaultvalue=""/></parametervalue>
+  </sourcevalues>
+</documentproperty>
+</documentproperties>
+  </configuration>
+  <dragpoints><dragpoint name="shape4.dragpoint1" toShape="shape5" x="800" y="56"/></dragpoints>
+</shape>
+<shape image="connectoraction_icon" name="shape5" shapetype="connectoraction" userlabel="Write Document" x="816.0" y="48.0">
+  <configuration>
+<connectoraction actionType="UPSERT" allowDynamicCredentials="NONE" connectionId="c9bd0c83-f253-4221-be5f-e4791a37ceb2" connectorType="disk-sdk" hideSettings="false" operationId="ec256248-eb54-4937-ae3f-dcf44b5f825a"><parameters></parameters><dynamicProperties/></connectoraction>
+  </configuration>
+  <dragpoints><dragpoint name="shape5.dragpoint1" toShape="shape6" x="992" y="56"/></dragpoints>
+</shape>
+<shape image="message_icon" name="shape6" shapetype="message" userlabel="Build Ack" x="1008.0" y="48.0">
+  <configuration>
+<message combined="false">
+  <msgTxt>'{&quot;ok&quot;: true, &quot;key&quot;: &quot;'{1}'&quot;}'</msgTxt>
+  <msgParameters>
+<parametervalue key="0" usesEncryption="false" valueType="process"><processparameter processproperty="DPP_KEY" processpropertydefaultvalue=""/></parametervalue>
+  </msgParameters>
+</message>
+  </configuration>
+  <dragpoints><dragpoint name="shape6.dragpoint1" toShape="shape7" x="1184" y="56"/></dragpoints>
+</shape>
+<shape image="returndocuments_icon" name="shape7" shapetype="returndocuments" userlabel="HTTP Response" x="1200.0" y="48.0">
+  <configuration>
+<returndocuments label="HTTP Response"/>
+  </configuration>
+  <dragpoints/>
+</shape>
+<shape image="message_icon" name="shape8" shapetype="message" userlabel="Build Rejection" x="624.0" y="208.0">
+  <configuration>
+<message combined="false">
+  <msgTxt>'{&quot;ok&quot;: false, &quot;error&quot;: &quot;INVALID_KEY&quot;, &quot;detail&quot;: &quot;kind/name not allowed&quot;}'</msgTxt>
+  <msgParameters>
+
+  </msgParameters>
+</message>
+  </configuration>
+  <dragpoints><dragpoint name="shape8.dragpoint1" toShape="shape9" x="800" y="216"/></dragpoints>
+</shape>
+<shape image="returndocuments_icon" name="shape9" shapetype="returndocuments" userlabel="Rejected" x="816.0" y="208.0">
+  <configuration>
+<returndocuments label="Rejected"/>
+  </configuration>
+  <dragpoints/>
+</shape>
+      </shapes>
+    </process>
+  </bns:object>
+  <bns:processOverrides/>
+</bns:Component>

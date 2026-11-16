@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bns:Component xmlns:bns="http://api.platform.boomi.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               componentId="344a91d1-5c7c-42f7-bdae-f48fa0f1c539" name="OmniMFT Disk List Requests" type="connector-action" subType="disk-sdk" folderId="Rjo4OTYzOTM1">
+  <bns:encryptedValues/>
+  <bns:description>List files in the requests directory (metadata only). | built with boomi-companion v1.0.103</bns:description>
+  <bns:object>
+    <Operation returnApplicationErrors="false" trackResponse="true">
+      <Archiving directory="" enabled="false"/>
+      <Configuration>
+        <GenericOperationConfig customOperationType="LIST" objectTypeId="DIRECTORY" operationType="QUERY" requestProfileType="xml" responseProfileType="json">
+          <field id="count" type="integer" value="-1"/>
+          <Options><QueryOptions><Fields><ConnectorObject name="Directory"><FieldList>
+            <ConnectorField filterable="true" name="createdDate" type="Comparable"/>
+            <ConnectorField filterable="false" name="directory" selectable="true" selected="true"/>
+            <ConnectorField filterable="true" name="fileName" type="FilePath"/>
+            <ConnectorField filterable="true" name="fileSize" type="Comparable"/>
+            <ConnectorField filterable="true" name="isDirectory" type="Boolean"/>
+            <ConnectorField filterable="true" name="modifiedDate" type="Comparable"/>
+          </FieldList>
+          <Filter><ConnectorBaseFilter><ConnectorFilterLogical logicalOperator="or">
+            <ConnectorFilterExpression expressionField="isDirectory" expressionOperator="EQUALS" key="0" name="isDirectory:EQUALS" type="Boolean"/>
+          </ConnectorFilterLogical></ConnectorBaseFilter></Filter><Sorts/></ConnectorObject></Fields>
+          <Inputs><Input key="0" name="isDirectory:EQUALS"/></Inputs></QueryOptions></Options>
+        </GenericOperationConfig>
+      </Configuration>
+      <Tracking><TrackedFields/></Tracking>
+      <Caching/>
+    </Operation>
+  </bns:object>
+</bns:Component>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bns:Component xmlns:bns="http://api.platform.boomi.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               componentId="0c0688f8-c2ec-4538-95fe-a899537f1c3e" name="OmniMFT WSS Send Notification" type="connector-action" subType="wss" folderId="Rjo4OTYzOTM1">
+  <bns:encryptedValues/>
+  <bns:description>Agentstudio sends an e-mail notification. POST /ws/simple/createOmnimftNotification?subject=&amp;severity=INFO|WARNING|CRITICAL&amp;to= (body = plain-text message) | built with boomi-companion v1.0.103</bns:description>
+  <bns:object>
+    <Operation>
+      <Archiving directory="" enabled="false"/>
+      <Configuration>
+        <WebServicesServerListenAction inputType="singledata" objectName="omnimftNotification" operationType="CREATE" outputType="singledata" responseContentType="application/json"/>
+      </Configuration>
+      <Tracking><TrackedFields/></Tracking>
+      <Caching/>
+    </Operation>
+  </bns:object>
+</bns:Component>

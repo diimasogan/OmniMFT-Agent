@@ -1,0 +1,10 @@
+{
+  "inbox_lab": {
+    "description": "Lab SFTP inbox (same target as RTGS site 02_ts_ssh_to_inbox)",
+    "host": "192.168.0.21",
+    "port": "22",
+    "user": "mftadmin",
+    "password_env": "SSH_INBOX_LAB_PASSWORD",
+    "upload_folder": "/usecase/inbox"
+  }
+}

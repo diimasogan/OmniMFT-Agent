@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bns:Component xmlns:bns="http://api.platform.boomi.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               componentId="7e466f9d-e82c-4928-b364-0f6bf0f77ce6" name="OmniMFT WSS Query Requests" type="connector-action" subType="wss" folderId="Rjo4OTYzOTM1">
+  <bns:encryptedValues/>
+  <bns:description>Bridge worker lists queued request files. GET /ws/simple/queryOmnimftRequests | built with boomi-companion v1.0.103</bns:description>
+  <bns:object>
+    <Operation>
+      <Archiving directory="" enabled="false"/>
+      <Configuration>
+        <WebServicesServerListenAction inputType="none" objectName="omnimftRequests" operationType="QUERY" outputType="singledata" responseContentType="application/json"/>
+      </Configuration>
+      <Tracking><TrackedFields/></Tracking>
+      <Caching/>
+    </Operation>
+  </bns:object>
+</bns:Component>

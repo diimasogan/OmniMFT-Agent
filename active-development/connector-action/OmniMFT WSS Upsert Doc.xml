@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bns:Component xmlns:bns="http://api.platform.boomi.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               componentId="681eca57-0079-4b10-bc28-413232f05a36" name="OmniMFT WSS Upsert Doc" type="connector-action" subType="wss" folderId="Rjo4OTYzOTM1">
+  <bns:encryptedValues/>
+  <bns:description>Bridge worker writes a snapshot or result. POST /ws/simple/upsertOmnimftDoc?kind=snapshots|results&amp;name= | built with boomi-companion v1.0.103</bns:description>
+  <bns:object>
+    <Operation>
+      <Archiving directory="" enabled="false"/>
+      <Configuration>
+        <WebServicesServerListenAction inputType="singledata" objectName="omnimftDoc" operationType="UPSERT" outputType="singledata" responseContentType="application/json"/>
+      </Configuration>
+      <Tracking><TrackedFields/></Tracking>
+      <Caching/>
+    </Operation>
+  </bns:object>
+</bns:Component>
